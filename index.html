@@ -229,6 +229,12 @@ body.phone main{max-width:none;padding-block:16px}
 .seltools .btn{background:rgba(10,6,20,.88);color:var(--stage-ink);border-color:var(--stage-mark);box-shadow:0 4px 14px rgba(0,0,0,.4);padding:5px 11px}
 .seltools .btn.go{background:var(--stage-mark);color:#22180a}
 .seltools .btn:hover{border-color:#fff}
+.pilltog{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--stage-line-2);background:transparent;color:rgba(233,226,246,.75);border-radius:999px;padding:5px 12px 5px 6px;font-weight:700;font-size:13px}
+.pilltog .trk{width:28px;height:16px;border-radius:9px;background:var(--stage-line-2);position:relative;flex:none}
+.pilltog .trk::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#e9e2f6;transition:left .15s}
+.pilltog[aria-pressed="true"]{border-color:var(--stage-mark);color:var(--stage-ink)}
+.pilltog[aria-pressed="true"] .trk{background:var(--stage-mark)}
+.pilltog[aria-pressed="true"] .trk::after{left:14px;background:#22180a}
 .swapbar{position:absolute;z-index:3;left:50%;top:64px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(10,6,20,.88);color:var(--stage-ink);border:1px solid var(--stage-mark);border-radius:999px;padding:6px 8px 6px 14px;font-size:13px;font-weight:600;white-space:nowrap;max-width:calc(100% - 24px)}
 .swapbar span{overflow:hidden;text-overflow:ellipsis}
 .swapbar .btn{background:transparent;color:var(--stage-ink);border-color:var(--stage-line-2)}
@@ -348,7 +354,7 @@ const parseHt=s=>{s=String(s).trim();let m=s.match(/^(\d)\s*['’ ]\s*(\d{1,2})?
 let team={name:"",roster:[],sessions:[],items:[]};
 let routines={};
 let motions={};
-const ui={swapFrom:null,collect:false,phone:false,ptab:"spot",tab:"stage",rid:ls.get("8c.rid"),f:0,beat:0,sel:new Set(),mode:"edit",view:"top",showPaths:true,snap:true,playing:false,spot:ls.get("8c.spot"),shortFront:true};
+const ui={swapFrom:null,swapMode:false,collect:false,phone:false,ptab:"spot",tab:"stage",rid:ls.get("8c.rid"),f:0,beat:0,sel:new Set(),mode:"edit",view:"top",showPaths:true,snap:true,playing:false,spot:ls.get("8c.spot"),shortFront:true};
 let canWrite=true, backend="loading", db=null, sampler=null;
 const dirty={}, timers={}, inflight={}, again={};
 const undoStack=[];
@@ -483,6 +489,7 @@ function renderStageTab(m){
         <div class="stagetop">
           <div style="min-width:0"><div class="fname" id="fName"></div><div class="fcount" id="fCount"></div></div>
           <div class="spacer"></div>
+          <button class="pilltog w" id="swapTog" aria-pressed="${ui.swapMode}" ${ui.mode==="edit"&&ui.view==="top"?"":"hidden"} title="Swap two dancers (S)"><span class="trk" aria-hidden="true"></span>Swap</button>
           <div class="seg" role="group" aria-label="View">
             <button data-view="top" aria-pressed="${ui.view==="top"}">Top</button>
             <button data-view="3d" aria-pressed="${ui.view==="3d"}">3D audience</button>
@@ -490,7 +497,7 @@ function renderStageTab(m){
         </div>
         <svg id="stageSvg" ${ui.view==="3d"?"hidden":""} xmlns="http://www.w3.org/2000/svg"></svg>
         <canvas id="stage3d" ${ui.view==="top"?"hidden":""}></canvas>
-        <div class="seltools" id="selTools" hidden><button class="btn sm go" id="swapBtn" aria-label="Swap this dancer with another">⇄ Swap</button><button class="btn sm" id="collectBtn">+ Collect</button><button class="btn sm" id="clearBtn">Clear</button></div>
+        <div class="seltools" id="selTools" hidden><button class="btn sm" id="collectBtn">+ Collect</button><button class="btn sm" id="clearBtn">Clear</button></div>
         <div class="swapbar" id="swapBar" role="status" hidden><span id="swapMsg"></span><button class="btn sm" id="barBtn">Cancel</button></div>
         <div class="transport" id="transport"></div>
       </div>
@@ -548,10 +555,10 @@ function bindStageTab(m){
   $("#rRen",m).onclick=()=>{const r=R();promptBox("Rename routine",r.title,"Save",v=>{pushUndo();r.title=v;saveRoutine(r);render()})};
   $("#rDup",m).onclick=()=>{const r=clone(R());r.id=uid();r.title+=" (copy)";r.created=Date.now();routines[r.id]=r;ui.rid=r.id;saveRoutine(r);render();toast("Routine duplicated")};
   $("#rDel",m).onclick=()=>{const r=R();confirmBox(`Delete “${r.title}”?`,"This removes it from this browser. You can undo right after with Ctrl+Z.","Delete",()=>{pushUndo();stop();delete routines[r.id];persistLocal();queue("r:"+r.id);ui.rid=null;render()})};
-  const sb=$("#swapBtn",m);if(sb)sb.onclick=()=>{const id=[...ui.sel][0];if(!id||ui.sel.size!==1)return;stop();ui.swapFrom=id;drawFrame()};
-  const cb=$("#collectBtn",m);if(cb)cb.onclick=()=>{stop();ui.swapFrom=null;ui.collect=true;drawFrame()};
+  const tg=$("#swapTog",m);if(tg)tg.onclick=toggleSwap;
+  const cb=$("#collectBtn",m);if(cb)cb.onclick=()=>{stop();ui.swapMode=false;ui.swapFrom=null;ui.collect=true;drawFrame()};
   const cl=$("#clearBtn",m);if(cl)cl.onclick=()=>{ui.sel.clear();drawFrame();renderInspector()};
-  const bb=$("#barBtn",m);if(bb)bb.onclick=()=>{if(ui.swapFrom){ui.swapFrom=null;drawFrame();return}if(ui.collect)finishCollect()};
+  const bb=$("#barBtn",m);if(bb)bb.onclick=()=>{if(ui.collect)finishCollect()};
   $$("[data-mode]",m).forEach(b=>b.onclick=()=>{ui.mode=b.dataset.mode;ui.sel.clear();render()});
   $$("[data-view]",m).forEach(b=>b.onclick=()=>{ui.view=b.dataset.view;render()});
 }
@@ -674,18 +681,20 @@ function drawGhost(r){const g=$("#lGhost");if(!g||!drag||!drag.preview)return;co
 function placeSwapUI(r,L){const tools=$("#selTools"),bar=$("#swapBar"),card=$(".stagecard");if(!tools||!bar||!card)return;
   const ok=ui.mode==="edit"&&canWrite&&ui.view==="top"&&!ui.playing&&!drag&&!L.moving;
   if(!ok){ui.swapFrom=null;ui.collect=false}
+  const tg=$("#swapTog");if(tg)tg.setAttribute("aria-pressed",String(ui.swapMode));
   if(ui.swapFrom&&!r.cast.includes(ui.swapFrom))ui.swapFrom=null;
-  $$(".tok").forEach(g=>g.classList.toggle("swapsrc",g.dataset.id===ui.swapFrom));$("#stageSvg")?.classList.toggle("swapping",!!(ui.swapFrom||ui.collect));
-  if(ui.swapFrom||ui.collect){tools.hidden=true;const n=ui.sel.size;
-    $("#swapMsg").textContent=ui.swapFrom?`Tap the dancer to swap with ${dancer(ui.swapFrom)?.name||""}`:`${n} dancer${n===1?"":"s"} collected · tap dancers to add or remove`;
-    $("#barBtn").textContent=ui.swapFrom?"Cancel":"Done";bar.hidden=false;return}
+  $$(".tok").forEach(g=>g.classList.toggle("swapsrc",g.dataset.id===ui.swapFrom));$("#stageSvg")?.classList.toggle("swapping",!!((ui.swapMode&&ok)||ui.collect));
+  if((ui.swapMode&&ok)||ui.collect){tools.hidden=true;const n=ui.sel.size;
+    $("#swapMsg").textContent=ui.collect?`${n} dancer${n===1?"":"s"} collected · tap dancers to add or remove`:ui.swapFrom?`Now tap who swaps with ${dancer(ui.swapFrom)?.name||""}`:"Swap is on · tap two dancers to trade places";
+    $("#barBtn").hidden=!ui.collect;$("#barBtn").textContent="Done";bar.hidden=false;return}
   bar.hidden=true;const ids=[...ui.sel].filter(id=>r.cast.includes(id));if(!ok||!ids.length){tools.hidden=true;return}
   const rects=ids.map(id=>$(`.tok[data-id="${id}"] circle.b`)).filter(Boolean).map(c=>c.getBoundingClientRect());if(!rects.length){tools.hidden=true;return}
   const cr=card.getBoundingClientRect(),sv=$("#stageSvg").getBoundingClientRect();const h=rects[0].height;
   const cx=(Math.min(...rects.map(q=>q.left))+Math.max(...rects.map(q=>q.right)))/2-cr.left,bottom=Math.max(...rects.map(q=>q.bottom))-cr.top;
-  $("#swapBtn").hidden=ids.length!==1;$("#collectBtn").textContent=ids.length===1?"+ Collect":"+ Add more";$("#clearBtn").hidden=ids.length<2;
+  $("#collectBtn").textContent=ids.length===1?"+ Collect":"+ Add more";$("#clearBtn").hidden=ids.length<2;
   tools.hidden=false;const tw=tools.offsetWidth;
   tools.style.left=clamp(cx,tw/2+8,cr.width-tw/2-8)+"px";tools.style.top=Math.min(bottom+h*0.6,sv.bottom-cr.top-tools.offsetHeight-4)+"px"}
+function toggleSwap(){stop();ui.swapMode=!ui.swapMode;ui.swapFrom=null;ui.collect=false;ui.sel.clear();drawFrame();renderInspector()}
 function finishCollect(){ui.collect=false;const n=ui.sel.size;drawFrame();renderInspector();
   if(n>1)toast(`${n} dancers selected. Tap a template to arrange just them, or drag one to move the group.`)}
 function swapDancers(a,b){const r=R();const f=r.formations[ui.f];const da=dancer(a),db=dancer(b);pushUndo();
@@ -699,7 +708,7 @@ function svgPt(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.client
 function bindStage(svg){
   svg.onpointerdown=e=>{if(ui.mode!=="edit"||!canWrite)return;const r=R();stop();const L=locate(r,ui.beat);if(L.moving){seekFormation(L.i);}
     const tok=e.target.closest(".tok");
-    if(ui.swapFrom){if(tok&&tok.dataset.id!==ui.swapFrom)swapDancers(ui.swapFrom,tok.dataset.id);else{ui.swapFrom=null;drawFrame()}return}
+    if(ui.swapMode){const id=tok&&tok.dataset.id;if(!id||id===ui.swapFrom)ui.swapFrom=null;else if(!ui.swapFrom){ui.swapFrom=id;ui.sel.clear()}else{swapDancers(ui.swapFrom,id);return}drawFrame();renderInspector();return}
     if(ui.collect){if(tok){const id=tok.dataset.id;ui.sel.has(id)?ui.sel.delete(id):ui.sel.add(id);drawFrame();renderInspector()}return}
     const p=svgPt(svg,e);
     if(tok){const id=tok.dataset.id;if(e.shiftKey||e.metaKey||e.ctrlKey){ui.sel.has(id)?ui.sel.delete(id):ui.sel.add(id)}else if(!ui.sel.has(id)){ui.sel.clear();ui.sel.add(id)}
@@ -1162,10 +1171,11 @@ document.addEventListener("keydown",e=>{if(ui.tab!=="stage"||!R())return;const t
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!typing&&canWrite){e.preventDefault();undo();return}
   if(typing)return;
   if(e.key===" "){e.preventDefault();toggle()}
+  else if((e.key==="s"||e.key==="S")&&!e.metaKey&&!e.ctrlKey&&ui.mode==="edit"&&ui.view==="top"&&canWrite){toggleSwap()}
   else if(e.key==="["){step(-1)}else if(e.key==="]"){step(1)}
   else if(e.key.startsWith("Arrow")&&ui.sel.size&&ui.mode==="edit"&&canWrite){e.preventDefault();const r=R();const f=r.formations[ui.f];const d=.5;pushUndo();
     ui.sel.forEach(id=>{const p={...posIn(r,f,id)};if(e.key==="ArrowLeft")p.x-=d;if(e.key==="ArrowRight")p.x+=d;if(e.key==="ArrowUp")p.y+=d;if(e.key==="ArrowDown")p.y-=d;f.pos[id]={x:+clamp(p.x,-r.W/2+.5,r.W/2-.5).toFixed(2),y:+clamp(p.y,.5,r.D-.5).toFixed(2)}});saveRoutine(r);drawFrame()}
-  else if(e.key==="Escape"){if(drag&&drag.kind==="move"){drag=null;clearGhost();drawFrame();return}if(ui.collect){finishCollect();return}ui.swapFrom=null;ui.sel.clear();drawFrame();renderInspector()}});
+  else if(e.key==="Escape"){if(drag&&drag.kind==="move"){drag=null;clearGhost();drawFrame();return}if(ui.swapMode){if(ui.swapFrom)ui.swapFrom=null;else toggleSwap();drawFrame();return}if(ui.collect){finishCollect();return}ui.swapFrom=null;ui.sel.clear();drawFrame();renderInspector()}});
 window.addEventListener("resize",()=>{if(ui.tab==="stage"&&R()&&!ui.phone)drawFrame()});
 const mq=window.matchMedia?.("(prefers-color-scheme: dark)");mq?.addEventListener?.("change",()=>{if(ui.view==="3d")drawFrame()});
 

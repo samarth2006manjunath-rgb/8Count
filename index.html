@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="8Count: a free formation planner for dance teams. Stage editor, 8-count timeline, music sync, 3D view and video-to-motion.">
+<meta name="theme-color" content="#251b38">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="8Count">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>a{color:#c46a12}body{margin:0;font:14px/1.45 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>8Count</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: app shell — sticky header with tabs; stage + inspector side by side, 8-count timeline strip below; stacks on phones. The dark stage floor is the one bold surface. */
+:root{
+  --bg:#f3f1f8; --surface:#ffffff; --surface-2:#ebe7f3; --ink:#1d1630; --muted:#6a6280; --line:#ddd7ea;
+  --accent:#d9781a; --accent-soft:#fbe7cf; --accent-ink:#ffffff;
+  --stage:#251b38; --stage-2:#2e2345; --stage-line:rgba(255,255,255,.07); --stage-line-2:rgba(255,255,255,.16); --stage-ink:#e9e2f6; --stage-mark:#f2b544;
+  --good:#1f8f5f; --warn:#b7791f; --bad:#c43d4b;
+  --f-display:"Yatra One", "Manrope", system-ui, sans-serif;
+  --f-body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#110d1b; --surface:#1a1427; --surface-2:#231b34; --ink:#eee9f7; --muted:#a49bba; --line:#2d2442;
+  --accent:#f2a33a; --accent-soft:#3a2a18; --accent-ink:#1a1206;
+  --stage:#1d1530; --stage-2:#251c3b; --stage-line:rgba(255,255,255,.06); --stage-line-2:rgba(255,255,255,.14); --stage-ink:#e9e2f6; --stage-mark:#f2b544;
+  --good:#4cc38a; --warn:#e0a84a; --bad:#ef6b78; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#110d1b; --surface:#1a1427; --surface-2:#231b34; --ink:#eee9f7; --muted:#a49bba; --line:#2d2442;
+  --accent:#f2a33a; --accent-soft:#3a2a18; --accent-ink:#1a1206;
+  --stage:#1d1530; --stage-2:#251c3b; --stage-line:rgba(255,255,255,.06); --stage-line-2:rgba(255,255,255,.14); --stage-ink:#e9e2f6; --stage-mark:#f2b544;
+  --good:#4cc38a; --warn:#e0a84a; --bad:#ef6b78; color-scheme:dark }
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+.hrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-size:26px;line-height:1;letter-spacing:.5px;display:flex;align-items:baseline;gap:2px}
+.brand b{color:var(--accent);font-weight:400}
+.teamname{color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tabs{display:flex;gap:2px;background:var(--surface-2);padding:3px;border-radius:999px}
+.tabs button{border:0;background:none;padding:6px 14px;border-radius:999px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.pill.ok i{background:var(--good)} .pill.warn i{background:var(--warn)} .pill.busy i{background:var(--accent)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:4px 9px;font-size:12px}
+.btn.danger{color:var(--bad)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 11px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-width:0}
+textarea{resize:vertical;width:100%}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px;max-width:1400px;margin:0 auto}
+
+/* routine bar */
+.rbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.rbar select{font-weight:700;font-size:15px;max-width:260px}
+.ro .w{display:none!important}
+
+/* stage area */
+.studio{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+@media (max-width:980px){.studio{grid-template-columns:minmax(0,1fr)}}
+.stagecard{background:var(--stage);border-radius:14px;padding:10px;position:relative;min-width:0}
+.stagetop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:2px 4px 8px;color:var(--stage-ink)}
+.stagetop .seg{border-color:var(--stage-line-2)}
+.stagetop .seg button{background:transparent;color:rgba(233,226,246,.7)}
+.stagetop .seg button+button{border-left-color:var(--stage-line-2)}
+.stagetop .seg button[aria-pressed="true"]{background:var(--stage-mark);color:#22180a}
+.fname{font-family:var(--f-display);font-size:20px;line-height:1.1;color:var(--stage-ink)}
+.fcount{font-family:var(--f-mono);font-size:12px;color:var(--stage-mark)}
+#stageSvg{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+#stage3d{display:block;width:100%;height:auto;border-radius:8px}
+.floor{fill:var(--stage-2)}
+.gl{stroke:var(--stage-line);stroke-width:.05}
+.gl2{stroke:var(--stage-line-2);stroke-width:.07}
+.cl{stroke:var(--stage-mark);stroke-width:.06;stroke-dasharray:.3 .3;opacity:.55}
+.num{fill:var(--stage-mark);font-family:var(--f-mono);font-size:.62px;text-anchor:middle;font-weight:700}
+.side{fill:rgba(233,226,246,.45);font-family:var(--f-body);font-size:.55px;font-weight:700;letter-spacing:.12px;text-anchor:middle}
+.tok{cursor:grab}
+.tok circle.b{stroke:rgba(0,0,0,.35);stroke-width:.06}
+.tok text.i{fill:#fff;font-family:var(--f-body);font-weight:800;font-size:.62px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.tok text.mv{fill:var(--stage-mark);font-family:var(--f-body);font-weight:700;font-size:.46px;text-anchor:middle;pointer-events:none}
+.tok text.nm{fill:var(--stage-ink);font-family:var(--f-body);font-weight:600;font-size:.46px;text-anchor:middle;pointer-events:none;opacity:.85}
+.tok .ring{fill:none;stroke:var(--stage-mark);stroke-width:.14;display:none}
+.tok.sel .ring{display:block}
+.tok.dim{opacity:.28}
+.tok.me .ring{display:block;stroke:#fff;stroke-width:.18}
+.ghost{fill:none;stroke-width:.06;stroke-dasharray:.18 .14;opacity:.6}
+.path{fill:none;stroke-width:.08;stroke-dasharray:.25 .2;opacity:.75}
+.marq{fill:rgba(242,181,68,.12);stroke:var(--stage-mark);stroke-width:.05}
+.ro .tok,.spot .tok{cursor:default}
+
+/* transport */
+.transport{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 4px 2px;color:var(--stage-ink)}
+.transport .btn{background:transparent;border-color:var(--stage-line-2);color:var(--stage-ink)}
+.transport .btn.pri{background:var(--stage-mark);border-color:var(--stage-mark);color:#22180a}
+.counter{display:flex;align-items:baseline;gap:10px;font-family:var(--f-mono)}
+.counter .big{font-size:22px;font-weight:700;color:var(--stage-mark)}
+.counter .sm{font-size:12px;color:rgba(233,226,246,.65)}
+.dots{display:flex;gap:4px}
+.dots span{width:9px;height:9px;border-radius:50%;background:var(--stage-line-2)}
+.dots span.on{background:var(--stage-mark)}
+
+/* timeline */
+.timeline{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px}
+.tlhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.tlscroll{overflow-x:auto;position:relative;padding-bottom:4px}
+.tlinner{position:relative;min-width:100%}
+.ruler{height:20px;position:relative;cursor:pointer;border-bottom:1px solid var(--line)}
+.ruler span{position:absolute;top:2px;font-family:var(--f-mono);font-size:10px;color:var(--muted);padding-left:3px;border-left:1px solid var(--line);height:16px}
+.blocks{display:flex;height:58px;margin-top:6px;position:relative}
+.blk{flex:none;display:flex;height:100%;border-radius:7px;overflow:hidden;cursor:pointer;border:2px solid transparent;margin-right:2px;min-width:0}
+.blk .h{background:var(--surface-2);padding:5px 7px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;overflow:hidden}
+.blk .t{background:repeating-linear-gradient(135deg,var(--surface-2) 0 5px,transparent 5px 10px);border-left:1px dashed var(--line)}
+.blk .h b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk .h small{font-family:var(--f-mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.blk.cur{border-color:var(--accent)}
+.blk.cur .h{background:var(--accent-soft)}
+.blk .nt{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:4px;vertical-align:middle}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);pointer-events:none}
+.addblk{flex:none;width:58px;height:100%;border:1.5px dashed var(--line);border-radius:7px;background:none;color:var(--muted);font-size:20px}
+
+/* inspector */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec+.sec{border-top:1px solid var(--line);padding-top:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.chip:hover{border-color:var(--accent)}
+.sw{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none}
+.hint{font-size:12px;color:var(--muted)}
+.tcat{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding:6px 0 4px;margin-top:4px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tcard{display:flex;flex-direction:column;gap:6px;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);text-align:center;min-width:0}
+.tcard:hover{border-color:var(--accent)}
+.tcard svg{width:100%;height:auto;display:block}
+.tcard .tfl{fill:var(--stage);stroke:var(--stage-line-2);stroke-width:.15}
+.tcard .tdot{fill:var(--stage-mark)}
+.tcard span{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:700;padding:0;text-decoration:underline}
+body.phone header{display:none}
+body.phone .tok:not(.me) text.nm,body.phone .tok:not(.me) text.mv{display:none}
+body.phone .tok.me text.nm,body.phone .tok.me text.mv{font-size:.7px}
+body.phone main{max-width:none;padding-block:16px}
+.p-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.p-dev{width:min(100%,402px);height:min(844px,calc(100dvh - 70px));min-height:560px;border-radius:54px;padding:11px;background:#0a0710;box-shadow:0 0 0 2px #2b2338,0 24px 60px rgba(20,10,40,.35)}
+.p-screen{height:100%;border-radius:44px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.p-island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:112px;height:32px;border-radius:20px;background:#000;z-index:2}
+.p-top{display:flex;align-items:baseline;gap:8px;padding:54px 18px 8px;min-width:0}
+.p-top .brand{font-size:22px}
+.p-sub{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-body{flex:1;overflow-y:auto;padding:4px 14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.p-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface);padding:7px 0 24px}
+.p-tabs button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;color:var(--muted)}
+.p-tabs button[aria-selected="true"]{color:var(--accent)}
+.p-tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.p-stage{background:var(--stage);border-radius:18px;padding:12px 10px 10px;display:flex;flex-direction:column;gap:6px}
+.p-stage .fname{font-size:19px}
+.p-btns{display:flex;justify-content:center;gap:14px;align-items:center}
+.p-btns button{width:46px;height:46px;border-radius:50%;border:1px solid var(--stage-line-2);background:transparent;color:var(--stage-ink);font-size:15px}
+.p-btns button.pri{width:62px;height:62px;background:var(--stage-mark);border-color:var(--stage-mark);color:#22180a;font-size:20px}
+.p-ctl{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:4px}
+.p-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.p-card b{font-size:15px}
+.p-card select{width:100%;margin-top:4px}
+.p-empty{text-align:center;color:var(--muted);padding:40px 12px}
+.p-note{font-size:12px;color:var(--muted);text-align:center}
+.p-body .sess{grid-template-columns:58px minmax(0,1fr);padding:10px 12px}
+.p-body .date b{font-size:18px}
+@media (max-width:520px){
+  .p-dev{width:100%;height:calc(100dvh - 36px);min-height:0;padding:0;border-radius:0;background:none;box-shadow:none}
+  .p-screen{border-radius:16px}.p-island{display:none}.p-top{padding-top:12px}.p-tabs{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  body.phone main{padding-block:8px}}
+.studio-box{max-width:1080px!important;max-height:calc(100dvh - 32px);overflow-y:auto}
+.ms-title{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;margin:0}
+.ms-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.ms-grid{grid-template-columns:minmax(0,1fr)}}
+.ms-step{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ms-h{display:flex;gap:10px;align-items:flex-start}
+.ms-h b{display:block;font-size:15px}
+.ms-h small{color:var(--muted);font-size:12px}
+.ms-n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.ms-pane{aspect-ratio:4/5;max-height:46vh;width:100%;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;overflow:hidden;text-align:center;padding:10px}
+.ms-pane video{max-width:100%;max-height:100%;border-radius:8px;background:#000}
+.ms-pane.dark{background:var(--stage);border-color:transparent;padding:0}
+.ms-pane canvas{width:100%;height:100%;display:block}
+.ms-prog{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.ms-prog div{height:100%;width:0;background:var(--accent);transition:width .15s}
+.ms-trim{display:grid;grid-template-columns:auto 1fr auto;gap:6px 8px;align-items:center;font-size:12px}
+.ms-trim input[type=range]{width:100%;accent-color:var(--accent)}
+.ms-who{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:9px;padding:6px 8px}
+.ms-who label{display:flex;align-items:center;gap:8px;font-size:13px}
+.clip{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.clip:last-child{border-bottom:0}
+.clip b{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cue{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:10px;border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.cue.cur{border-color:var(--accent);background:var(--accent-soft)}
+.cue .n{font-family:var(--f-mono);font-size:11px;color:var(--muted);grid-row:span 3}
+.cue b{font-size:13px}
+.cue .p{font-size:12px}
+.cue .m{font-size:12px;color:var(--muted)}
+
+/* lists (team, rehearsals, wardrobe) */
+.pagehead{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.pagehead h1{font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.1;margin:0;text-wrap:balance}
+.pagehead p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td input[type=text]{width:100%;min-width:90px}
+td input.ht{width:64px}
+td select{max-width:140px}
+.status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.st-needed{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.st-ordered{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.st-ready{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.sess{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.sess:last-child{border-bottom:0}
+.sess.past{opacity:.55}
+.date{display:flex;flex-direction:column;align-items:center;border:1px solid var(--line);border-radius:9px;padding:6px 0;background:var(--surface-2)}
+.date b{font-family:var(--f-display);font-size:22px;font-weight:400;line-height:1}
+.date small{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.statrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted)}
+.stat b{display:block;font-family:var(--f-mono);font-size:18px;color:var(--ink)}
+
+/* welcome */
+.welcome{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px}
+@media (max-width:820px){.welcome{grid-template-columns:minmax(0,1fr)}}
+.welcome h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,4vw,40px);line-height:1.08;margin:0 0 10px;text-wrap:balance}
+.welcome p{color:var(--muted);margin:0 0 16px;max-width:52ch}
+.welcome ul{margin:0 0 18px;padding-left:18px;color:var(--muted)}
+.welcome li{margin:3px 0}
+
+.banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:999px;font-weight:600;font-size:13px;z-index:20;max-width:calc(100vw - 32px)}
+.modal{position:fixed;inset:0;background:rgba(10,6,20,.5);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
+.modal .box{background:var(--surface);border-radius:14px;padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px}
+.kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px}
+@media (max-width:600px){ .brand{font-size:22px} .tabs button{padding:6px 10px} .counter .big{font-size:18px} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="brand" aria-label="8Count"><b>8</b>Count</div>
+    <span class="teamname" id="teamLabel"></span>
+    <div class="spacer"></div>
+    <span class="pill" id="syncPill"><i></i><span>Loading…</span></span>
+  </div>
+  <div class="hrow" style="margin-top:8px">
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="stage" aria-selected="true">Stage</button>
+      <button role="tab" data-tab="team">Team</button>
+      <button role="tab" data-tab="rehearsals">Rehearsals</button>
+      <button role="tab" data-tab="wardrobe">Costumes &amp; props</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main"></main>
+<audio id="au" preload="auto"></audio>
+<input type="file" id="songFile" accept="audio/*,video/mp4" hidden>
+
+<script>
+(()=>{
+"use strict";
+/* ---------------- constants ---------------- */
+const PALETTE=["#e0457b","#19a974","#2f7de1","#f29a1f","#9b5de5","#00a9b5","#e8603c","#c9a227","#5c6bc0","#d6409f","#43a047","#a1887f","#ef5350","#26c6da","#7e57c2","#8bc34a"];
+const MOVES=["Thumka","Chakkar spin","Jhatka","Bhangra shoulders","Lehra arms","Mudra pose","Floor drop","Lift","Ripple","Canon","Clap","Freeze"];
+const TEMPLATE_GROUPS=[
+  ["For {n} dancers",[["honeycomb","Honeycomb field"],["windows","Windows"],["clusters","Trios"],["files2","Two files"]]],
+  ["Lines & files",[["line","Horizontal line"],["file","Vertical file"],["diag","Diagonal, rising left"],["diag2","Diagonal, rising right"]]],
+  ["Arcs & curves",[["arcFront","Arc toward audience"],["arcBack","Arc away"],["circle","Circle"],["arc","Arc + soloist"]]],
+  ["Shapes",[["v","V to audience"],["invv","Inverted V"],["pyramid","Pyramid"],["diamond","Diamond"]]],
+  ["Blocks & groups",[["block","Block"],["split","Split groups"]]]];
+const ROLES=["Dancer","Captain","Choreographer","Co-captain"];
+const SKILLS=["Beginner","Intermediate","Advanced"];
+const STATUSES=[["needed","Needed"],["ordered","Ordered"],["ready","Ready"]];
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>[...el.querySelectorAll(s)];
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-3);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ls={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const initials=n=>{const p=String(n||"?").trim().split(/\s+/);return ((p[0]||"?")[0]+(p[1]?p[1][0]:(p[0]||"")[1]||"")).toUpperCase()};
+const shortName=n=>{n=String(n||"");return n.length<=10?n:n.split(/\s+/)[0]};
+const fmtHt=inch=>{inch=Math.round(inch||0);return inch?`${Math.floor(inch/12)}'${inch%12}"`:""};
+const parseHt=s=>{s=String(s).trim();let m=s.match(/^(\d)\s*['’ ]\s*(\d{1,2})?/);if(m)return (+m[1])*12+(+(m[2]||0));m=s.match(/^(\d{2,3})$/);if(m)return +m[1];return 0};
+
+/* ---------------- state ---------------- */
+let team={name:"",roster:[],sessions:[],items:[]};
+let routines={};
+let motions={};
+const ui={phone:false,ptab:"spot",tab:"stage",rid:ls.get("8c.rid"),f:0,beat:0,sel:new Set(),mode:"edit",view:"top",showPaths:true,snap:true,playing:false,spot:ls.get("8c.spot"),shortFront:true};
+let canWrite=true, backend="loading", db=null, sampler=null;
+const dirty={}, timers={}, inflight={}, again={};
+const undoStack=[];
+
+/* cache for instant first paint + offline */
+const cache=ls.get("8c.cache");
+if(cache&&cache.team){team=cache.team;routines=cache.routines||{};motions=cache.motions||{}}
+function persistLocal(){ls.set("8c.cache",{team,routines,motions})}
+
+/* ---------------- helpers on routines ---------------- */
+const R=()=>routines[ui.rid]||null;
+const sortedRoutines=()=>Object.values(routines).sort((a,b)=>(a.created||0)-(b.created||0));
+const dancer=id=>team.roster.find(d=>d.id===id);
+const castOf=r=>r.cast.map(dancer).filter(Boolean);
+function starts(r){const s=[];let b=0;r.formations.forEach((f,i)=>{s.push(b);b+=f.hold+(i<r.formations.length-1?f.trans:0)});return s}
+function totalBeats(r){const s=starts(r);const l=r.formations.length-1;return l<0?0:s[l]+r.formations[l].hold}
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function locate(r,beat){const s=starts(r);let i=r.formations.length-1;for(let k=0;k<s.length;k++){if(beat<s[k]+r.formations[k].hold+(k<s.length-1?r.formations[k].trans:0)){i=k;break}}
+  const into=beat-s[i],f=r.formations[i];if(into<f.hold||i===r.formations.length-1)return{i,t:0,moving:false};return{i,t:clamp((into-f.hold)/Math.max(f.trans,.0001),0,1),moving:true}}
+function defaultSpot(r,id){const k=r.cast.indexOf(id);const n=Math.max(r.cast.length,1);const sp=Math.min(3,(r.W-4)/Math.max(n-1,1));return{x:+((k-(n-1)/2)*sp).toFixed(1),y:+(r.D*0.4).toFixed(1)}}
+function posIn(r,f,id){return f.pos[id]||defaultSpot(r,id)}
+function posAt(r,beat,id){const L=locate(r,beat);const a=posIn(r,r.formations[L.i],id);if(!L.moving)return a;const b=posIn(r,r.formations[L.i+1],id);const e=ease(L.t);return{x:a.x+(b.x-a.x)*e,y:a.y+(b.y-a.y)*e}}
+function beatToSec(r,b){return r.offset+b*60/r.bpm}
+function secToBeat(r,s){return (s-r.offset)*r.bpm/60}
+const fmtTime=s=>{s=Math.max(0,s);return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`};
+const eightLabel=b=>{b=Math.max(0,b);return{eight:Math.floor(b/8)+1,count:Math.floor(b%8)+1}};
+function describePos(r,p){const x=Math.abs(p.x)<.25?"center":`${Math.abs(p.x).toFixed(1).replace(/\.0$/,"")} ft stage ${p.x>0?"left":"right"}`;
+  return `${x}, ${p.y.toFixed(1).replace(/\.0$/,"")} ft from the front`}
+
+/* ---------------- templates ---------------- */
+function template(kind,n,W,D){const P=[];if(!n)return P;const cx=0,mid=D*0.45,sp=n>1?Math.min(3,(W-4)/(n-1)):0;
+  const line=(m,y,s,off=0)=>{for(let k=0;k<m;k++)P.push({x:(k-(m-1)/2)*s+off,y})};
+  switch(kind){
+    case"line":line(n,mid,sp);break;
+    case"windows":{const a=Math.ceil(n/2),b=n-a,s=Math.min(4,(W-4)/Math.max(a,1));line(a,D*0.32,s);line(b,D*0.32+4,s,b===a?s/2:0);break}
+    case"v":case"invv":{const s=Math.min(2.6,(W-4)/Math.max(n,2));for(let k=0;k<n;k++){const side=k===0?0:(k%2?-1:1),step=Math.ceil(k/2);const y=kind==="v"?D*0.25+step*1.7:D*0.75-step*1.7;P.push({x:side*step*s,y})}break}
+    case"diag":for(let k=0;k<n;k++){const t=n>1?k/(n-1):.5;P.push({x:-W*0.35+t*W*0.7,y:D*0.2+t*D*0.6})}break;
+    case"circle":{const rr=Math.min(W,D)*0.3;for(let k=0;k<n;k++){const a=Math.PI/2+k*2*Math.PI/n;P.push({x:cx+rr*Math.cos(a),y:D*0.5+rr*Math.sin(a)})}break}
+    case"block":{const c=Math.ceil(Math.sqrt(n*1.4)),rows=Math.ceil(n/c);let k=0;for(let r=0;r<rows;r++){const m=Math.min(c,n-k);line(m,D*0.28+r*3.2,3.2);k+=m}break}
+    case"pyramid":{let k=0,r=1;while(k<n){const m=Math.min(r,n-k);line(m,D*0.22+(r-1)*2.8,3.4);k+=m;r++}break}
+    case"split":{const a=Math.ceil(n/2),b=n-a;const blk=(m,ox)=>{const c=Math.ceil(Math.sqrt(m));for(let k=0;k<m;k++)P.push({x:ox+((k%c)-(c-1)/2)*2.6,y:D*0.35+Math.floor(k/c)*2.6})};blk(a,-W*0.27);blk(b,W*0.27);break}
+    case"file":{const s=n>1?Math.min(2.6,(D-4)/(n-1)):0;for(let k=0;k<n;k++)P.push({x:0,y:D*0.5+(k-(n-1)/2)*s});break}
+    case"files2":{const a=Math.ceil(n/2),b=n-a;const col=(m,x)=>{const s=m>1?Math.min(2.6,(D-4)/(m-1)):0;for(let k=0;k<m;k++)P.push({x,y:D*0.5+(k-(m-1)/2)*s})};col(a,-W*0.18);col(b,W*0.18);break}
+    case"diag2":for(let k=0;k<n;k++){const t=n>1?k/(n-1):.5;P.push({x:W*0.35-t*W*0.7,y:D*0.2+t*D*0.6})}break;
+    case"honeycomb":{const s=n>1?Math.min(2.6,(W-4)/(n-1)):0;for(let k=0;k<n;k++)P.push({x:(k-(n-1)/2)*s,y:mid+(k%2?-1.2:1.2)});break}
+    case"clusters":{const g=Math.ceil(n/3);const gs=g>1?Math.min(9,(W-6)/(g-1)):0;const tri=[[0,1.2],[-1.3,-1],[1.3,-1]];for(let k=0;k<n;k++){const gi=Math.floor(k/3),o=tri[k%3];P.push({x:(gi-(g-1)/2)*gs+o[0],y:mid+o[1]+(gi%2?2:0)})}break}
+    case"arcFront":case"arcBack":{const s=n>1?Math.min(3,(W-4)/(n-1)):0;const half=((n-1)/2)*s||1;for(let k=0;k<n;k++){const x=(k-(n-1)/2)*s;const c=(x/half)*(x/half)*D*0.25;P.push({x,y:kind==="arcFront"?D*0.25+c:D*0.6-c})}break}
+    case"diamond":{const rx=Math.min(W*0.3,1.6*n),ry=Math.min(D*0.3,1.1*n);for(let k=0;k<n;k++){const t=k/n*4;const seg=Math.floor(t),u=t-seg;const pts=[[0,-ry],[rx,0],[0,ry],[-rx,0],[0,-ry]];const a=pts[seg],b=pts[seg+1];P.push({x:a[0]+(b[0]-a[0])*u,y:D*0.5+a[1]+(b[1]-a[1])*u})}break}
+    case"arc":{P.push({x:0,y:D*0.2});const m=n-1,rr=Math.min(W*0.38,D*0.5);for(let k=0;k<m;k++){const a=Math.PI*(0.15+0.7*(m>1?k/(m-1):.5));P.push({x:-rr*Math.cos(a),y:D*0.25+rr*Math.sin(a)*0.9})}break}
+  }
+  return P.map(p=>({x:+clamp(p.x,-W/2+1,W/2-1).toFixed(1),y:+clamp(p.y,1,D-1).toFixed(1)}))}
+function assign(r,points,ids){/* shortest to front-most spots when chosen */
+  let ds=ids.map(dancer).filter(Boolean);let pts=points.slice();
+  if(ui.shortFront){ds.sort((a,b)=>(a.height||66)-(b.height||66));pts.sort((a,b)=>a.y-b.y||Math.abs(a.x)-Math.abs(b.x))}
+  const out={};ds.forEach((d,k)=>{if(pts[k])out[d.id]=pts[k]});return out}
+
+/* ---------------- persistence ---------------- */
+function setStatus(kind,text){const p=$("#syncPill");p.className="pill "+kind;p.lastChild.textContent=text}
+function pushUndo(){const r=R();if(!r)return;undoStack.push({rid:r.id,data:clone(r)});if(undoStack.length>60)undoStack.shift()}
+function undo(){const u=undoStack.pop();if(!u)return toast("Nothing to undo");routines[u.rid]=u.data;ui.rid=u.rid;ui.f=Math.min(ui.f,u.data.formations.length-1);saveRoutine(u.data,true);render();toast("Undone")}
+function saveRoutine(r,skipStamp){if(!canWrite)return;if(!skipStamp)r.updatedAt=Date.now();persistLocal();queue("r:"+r.id)}
+function saveTeam(){if(!canWrite)return;team.updatedAt=Date.now();persistLocal();queue("team")}
+function queue(key){if(backend!=="cloud"){setStatus("ok","Saved in this browser");return}dirty[key]=true;setStatus("busy","Saving…");clearTimeout(timers[key]);timers[key]=setTimeout(()=>{delete timers[key];flush(key)},450)}
+async function flush(key){if(inflight[key]){again[key]=true;return}inflight[key]=true;
+  try{if(key==="team"){await db.doc("team/main").set(clone(team))}
+      else{const id=key.slice(2);const r=routines[id];if(r)await db.doc("routines/"+id).set(clone(r));else await db.doc("routines/"+id).delete()}
+      setStatus("ok","Synced with team")}
+  catch(e){const c=e&&e.code;
+    if(c==="invalid_argument"){canWrite=false;applyRO();setStatus("warn","View only");toast("You can view this routine but not edit it")}
+    else if(c==="quota_exceeded"){setStatus("warn","Storage full");toast("Team storage is full. Delete an old routine to keep saving.")}
+    else{setStatus("warn","Not synced – retrying");setTimeout(()=>{dirty[key]=true;flush(key)},2500+Math.random()*1500)}}
+  finally{inflight[key]=false;if(again[key]){again[key]=false;flush(key)}else{dirty[key]=!!timers[key]}}}
+
+/* song files stay on each device (IndexedDB) */
+const idb={_db:null,async open(){if(this._db)return this._db;return this._db=await new Promise((res,rej)=>{try{const q=indexedDB.open("8count",1);q.onupgradeneeded=()=>q.result.createObjectStore("songs");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}})},
+  async put(k,v){try{const d=await this.open();await new Promise((res,rej)=>{const t=d.transaction("songs","readwrite");t.objectStore("songs").put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}},
+  async get(k){try{const d=await this.open();return await new Promise((res,rej)=>{const q=d.transaction("songs").objectStore("songs").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}catch(e){return null}}};
+let songFor=null, songUrl=null;
+async function loadSongFor(r){const au=$("#au");if(!r){return}if(songFor===r.id)return;songFor=r.id;if(songUrl){URL.revokeObjectURL(songUrl);songUrl=null}au.removeAttribute("src");au.load();
+  const blob=await idb.get(r.id);if(blob&&songFor===r.id){songUrl=URL.createObjectURL(blob);au.src=songUrl}if(ui.tab==="stage")renderTransport()}
+const hasSong=()=>!!$("#au").getAttribute("src");
+
+/* ---------------- toast / modal ---------------- */
+let tt;function toast(msg){let el=$(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el)}el.textContent=msg;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2600)}
+function confirmBox(title,body,okText,onOk){const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="box" role="dialog" aria-modal="true"><b style="font-size:16px">${esc(title)}</b><div class="hint" style="font-size:13px">${esc(body)}</div><div class="row" style="justify-content:flex-end"><button class="btn" data-x>Cancel</button><button class="btn pri" data-ok>${esc(okText)}</button></div></div>`;
+  document.body.appendChild(m);m.addEventListener("click",e=>{if(e.target===m||e.target.closest("[data-x]"))m.remove();if(e.target.closest("[data-ok]")){m.remove();onOk()}});$("[data-ok]",m).focus()}
+function promptBox(title,value,okText,onOk){const m=document.createElement("div");m.className="modal";m.innerHTML=`<form class="box"><b style="font-size:16px">${esc(title)}</b><input type="text" id="pbIn" value="${esc(value)}"><div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-x>Cancel</button><button class="btn pri">${esc(okText)}</button></div></form>`;
+  document.body.appendChild(m);const inp=$("#pbIn",m);inp.focus();inp.select();m.addEventListener("click",e=>{if(e.target===m||e.target.closest("[data-x]"))m.remove()});$("form",m).addEventListener("submit",e=>{e.preventDefault();const v=inp.value.trim();m.remove();if(v)onOk(v)})}
+
+/* ---------------- render: shell ---------------- */
+function applyRO(){document.body.classList.toggle("ro",!canWrite);if(!canWrite&&ui.mode==="edit"){ui.mode="spot"}}
+function render(){
+  document.body.classList.toggle("phone",ui.phone);
+  if(ui.phone){renderPhone();return}
+  $("#teamLabel").textContent=team.name||"";
+  $$("#tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===ui.tab)));
+  document.body.classList.toggle("spot",ui.mode==="spot");
+  const m=$("#main");
+  if(ui.tab==="stage")renderStageTab(m);else if(ui.tab==="team")renderTeam(m);else if(ui.tab==="rehearsals")renderSessions(m);else renderWardrobe(m);
+}
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;stop();ui.tab=b.dataset.tab;render();window.scrollTo(0,0)});
+
+/* ---------------- STAGE TAB ---------------- */
+function renderStageTab(m){
+  const list=sortedRoutines();
+  if(!list.length){m.innerHTML=welcomeHTML();bindWelcome(m);return}
+  if(!routines[ui.rid])ui.rid=list[0].id;const r=R();ls.set("8c.rid",r.id);
+  ui.f=clamp(ui.f,0,r.formations.length-1);
+  loadSongFor(r);
+  const cast=castOf(r);
+  m.innerHTML=`
+  
+  ${!canWrite?`<div class="banner">You have view access. Pick your name under <b>My spot</b> to see where you stand on every count.</div>`:""}
+  <div class="rbar">
+    <select id="rSel" aria-label="Routine">${list.map(x=>`<option value="${x.id}" ${x.id===r.id?"selected":""}>${esc(x.title)}</option>`).join("")}</select>
+    <button class="btn sm w" id="rNew">+ New routine</button>
+    <button class="btn sm ghost w" id="rRen">Rename</button>
+    <button class="btn sm ghost w" id="rDup">Duplicate</button>
+    <button class="btn sm ghost danger w" id="rDel">Delete</button>
+    <button class="btn sm pri" id="rShare">Share</button>
+    <button class="btn sm" id="rImport">Open file</button>
+    <button class="btn sm" id="rPhone">iPhone view</button>
+    <div class="spacer"></div>
+    <div class="seg" role="group" aria-label="Mode">
+      <button class="w" data-mode="edit" aria-pressed="${ui.mode==="edit"}">Edit</button>
+      <button data-mode="spot" aria-pressed="${ui.mode==="spot"}">My spot</button>
+    </div>
+  </div>
+  <div class="studio">
+    <div style="min-width:0">
+      <div class="stagecard">
+        <div class="stagetop">
+          <div style="min-width:0"><div class="fname" id="fName"></div><div class="fcount" id="fCount"></div></div>
+          <div class="spacer"></div>
+          <div class="seg" role="group" aria-label="View">
+            <button data-view="top" aria-pressed="${ui.view==="top"}">Top</button>
+            <button data-view="3d" aria-pressed="${ui.view==="3d"}">3D audience</button>
+          </div>
+        </div>
+        <svg id="stageSvg" ${ui.view==="3d"?"hidden":""} xmlns="http://www.w3.org/2000/svg"></svg>
+        <canvas id="stage3d" ${ui.view==="top"?"hidden":""}></canvas>
+        <div class="transport" id="transport"></div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+    <aside class="panel" id="inspector"></aside>
+  </div>`;
+  bindStageTab(m);
+  if(!cast.length&&ui.mode==="edit")$("#inspector").innerHTML=`<div class="sec"><b>No dancers in this routine yet</b><p class="hint">Add your team on the Team tab, then tick who dances in “${esc(r.title)}”.</p><button class="btn pri" id="goTeam">Add dancers</button></div>`,$("#goTeam").onclick=()=>{ui.tab="team";render()};
+  else renderInspector();
+  buildStage();renderTimeline();renderTransport();drawFrame();
+}
+function welcomeHTML(){const demo=template("v",9,32,24);return `
+  <div class="welcome">
+    <div>
+      <div class="lbl" style="margin-bottom:8px">${esc(team.name||"Your team's formation planner")}</div>
+      <h1>Plan every formation, count by count.</h1>
+      <p>Build formations on a real stage grid, set them to your song in 8-counts, and let every dancer check their spot from their phone. Free for the whole team.</p>
+      <ul><li>Drag dancers on a measured stage, with 18 ready-made templates</li><li>Transitions animated to your music, plus a 3D audience view</li><li>Roster with heights, rehearsals, costumes and props</li></ul>
+      <div class="row w"><button class="btn pri" id="wNew">Start a routine</button><button class="btn" id="wOpen">Open a routine file</button>${team.roster.length?"":`<button class="btn" id="wSample">Try a sample routine</button>`}</div>
+      ${canWrite?"":`<p class="hint">Your captain hasn't added a routine yet.</p>`}
+    </div>
+    <svg viewBox="-18 -2 36 28" style="width:100%;max-width:520px;justify-self:center;background:var(--stage);border-radius:14px" aria-hidden="true">
+      <rect x="-16" y="0" width="32" height="24" rx=".6" class="floor"/>
+      ${Array.from({length:17},(_,k)=>`<line class="gl" x1="${-16+k*2}" y1="0" x2="${-16+k*2}" y2="24"/>`).join("")}
+      ${Array.from({length:13},(_,k)=>`<line class="gl" x1="-16" y1="${k*2}" x2="16" y2="${k*2}"/>`).join("")}
+      <line class="cl" x1="0" y1="0" x2="0" y2="24"/>
+      ${demo.map((p,k)=>`<circle cx="${p.x}" cy="${24-p.y}" r=".95" fill="${PALETTE[k]}"/>`).join("")}
+      <text class="num" x="0" y="25.4">0</text>
+    </svg>
+  </div>`}
+function bindWelcome(m){const o=$("#wOpen",m);if(o)o.onclick=pickImport;const n=$("#wNew",m);if(n)n.onclick=()=>newRoutineFlow();const s=$("#wSample",m);if(s)s.onclick=loadSample}
+function newRoutineFlow(){promptBox("Name the routine","Fall Showcase Mix","Create",title=>{const r=makeRoutine(title);routines[r.id]=r;ui.rid=r.id;ui.f=0;ui.beat=0;saveRoutine(r);ui.tab="stage";render()})}
+function makeRoutine(title){const r={id:uid(),title,created:Date.now(),W:32,D:24,bpm:100,offset:0,songName:"",songDur:0,cast:team.roster.map(d=>d.id),formations:[],updatedAt:Date.now()};
+  const pos=assign(r,template("windows",r.cast.length,r.W,r.D),r.cast);r.formations.push({id:uid(),name:"Opening",hold:8,trans:8,notes:"",pos,moves:{}});return r}
+function loadSample(){
+  const names=["Dancer A","Dancer B","Dancer C","Dancer D","Dancer E","Dancer F","Dancer G","Dancer H"];const hts=[61,63,64,65,66,68,70,72];
+  team.roster=names.map((n,k)=>({id:uid(),name:n,height:hts[k],color:PALETTE[k],role:k===0?"Captain":"Dancer",skill:SKILLS[k%3],sample:true}));
+  if(!team.name)team.name="Sample team";saveTeam();
+  const r={id:uid(),title:"Sample: Bollywood medley",created:Date.now(),W:32,D:24,bpm:96,offset:0,songName:"",songDur:0,cast:team.roster.map(d=>d.id),formations:[],updatedAt:Date.now()};
+  const mk=(name,kind,hold,trans,notes,moves)=>{const pos=assign(r,template(kind,8,32,24),r.cast);const mv={};if(moves)r.cast.forEach((id,k)=>{if(moves[k%moves.length])mv[id]=moves[k%moves.length]});r.formations.push({id:uid(),name,hold,trans,notes,pos,moves:mv})};
+  mk("Entrance","diag",8,8,"Walk in on the beat, heads down until count 8.",["Freeze"]);
+  mk("Hook step","windows",16,8,"Front row stays low for the first 8.",["Thumka","Jhatka"]);
+  mk("Chorus V","v",16,8,"Point of the V hits on 1. Big energy.",["Lehra arms"]);
+  mk("Circle","circle",8,4,"",["Chakkar spin"]);
+  mk("Split","split",8,8,"Canon left group first, right group answers.",["Canon","Ripple"]);
+  mk("Final pose","pyramid",8,0,"Hold the pose for 4 after the music cuts.",["Mudra pose","Floor drop"]);
+  routines[r.id]=r;ui.rid=r.id;ui.f=0;ui.beat=0;saveRoutine(r);render();toast("Sample routine loaded. Rename dancers on the Team tab.")}
+
+function bindStageTab(m){
+  $("#rSel",m).onchange=e=>{stop();ui.rid=e.target.value;ui.f=0;ui.beat=0;ui.sel.clear();render()};
+  $("#rNew",m).onclick=newRoutineFlow;
+  $("#rShare",m).onclick=shareRoutine;$("#rImport",m).onclick=pickImport;
+  $("#rPhone",m).onclick=()=>{stop();location.hash="phone"};
+  $("#rRen",m).onclick=()=>{const r=R();promptBox("Rename routine",r.title,"Save",v=>{pushUndo();r.title=v;saveRoutine(r);render()})};
+  $("#rDup",m).onclick=()=>{const r=clone(R());r.id=uid();r.title+=" (copy)";r.created=Date.now();routines[r.id]=r;ui.rid=r.id;saveRoutine(r);render();toast("Routine duplicated")};
+  $("#rDel",m).onclick=()=>{const r=R();confirmBox(`Delete “${r.title}”?`,"This removes it from this browser. You can undo right after with Ctrl+Z.","Delete",()=>{pushUndo();stop();delete routines[r.id];persistLocal();queue("r:"+r.id);ui.rid=null;render()})};
+  $$("[data-mode]",m).forEach(b=>b.onclick=()=>{ui.mode=b.dataset.mode;ui.sel.clear();render()});
+  $$("[data-view]",m).forEach(b=>b.onclick=()=>{ui.view=b.dataset.view;render()});
+}
+
+/* ----- stage svg ----- */
+let svgReady=false;
+function buildStage(){const r=R();const svg=$("#stageSvg");if(!svg)return;const{W,D}=r;const pad=1.8;
+  svg.setAttribute("viewBox",`${-W/2-pad} ${-pad} ${W+pad*2} ${D+pad+2.2}`);
+  let g="";for(let x=-W/2;x<=W/2+1e-6;x+=1)g+=`<line class="${Math.round(x)%2===0?"gl2":"gl"}" x1="${x}" y1="0" x2="${x}" y2="${D}" ${Math.round(x)%2===0?"":"opacity=\".6\""}/>`;
+  for(let y=0;y<=D+1e-6;y+=1)g+=`<line class="${Math.round(y)%2===0?"gl2":"gl"}" x1="${-W/2}" y1="${y}" x2="${W/2}" y2="${y}" ${Math.round(y)%2===0?"":"opacity=\".6\""}/>`;
+  let nums="";for(let x=-Math.floor(W/4)*2;x<=W/2;x+=2)nums+=`<text class="num" x="${x}" y="${D+1.05}">${Math.abs(x)}</text>`;
+  svg.innerHTML=`<rect class="floor" x="${-W/2}" y="0" width="${W}" height="${D}" rx=".4"/>${g}
+    <line class="cl" x1="0" y1="0" x2="0" y2="${D}"/><line class="cl" x1="${-W/2}" y1="${D/2}" x2="${W/2}" y2="${D/2}"/>
+    ${nums}<text class="side" x="0" y="-.6">UPSTAGE</text><text class="side" x="0" y="${D+1.95}">AUDIENCE</text>
+    <text class="side" transform="translate(${-W/2-.8} ${D/2}) rotate(-90)">STAGE RIGHT</text>
+    <text class="side" transform="translate(${W/2+.8} ${D/2}) rotate(90)">STAGE LEFT</text>
+    <g id="lPaths"></g><g id="lToks"></g><rect class="marq" id="marq" hidden/>`;
+  svgReady=true;buildTokens();bindStage(svg)}
+function buildTokens(){const r=R();const L=$("#lToks");if(!L)return;
+  L.innerHTML=castOf(r).map(d=>`<g class="tok" data-id="${d.id}" tabindex="-1"><circle class="ring" r="1.3"/><circle class="b" r=".95" fill="${d.color}"/><text class="i">${esc(initials(d.name))}</text><text class="nm" y="-1.35">${esc(shortName(d.name))}</text><text class="mv" y="1.75"></text></g>`).join("")}
+function drawFrame(){const r=R();if(!r)return;const beat=ui.beat;const L=locate(r,beat);const cur=r.formations[L.i];
+  if(!ui.playing)ui.f=L.i;
+  const fn=$("#fName"),fc=$("#fCount");
+  if(fn){fn.textContent=L.moving?`${cur.name} → ${r.formations[L.i+1].name}`:cur.name;const e=eightLabel(beat);fc.textContent=`Formation ${L.i+1} of ${r.formations.length} · 8-count ${e.eight}, count ${e.count}`}
+  if(ui.view==="3d")draw3d(r,beat,L);else drawTop(r,beat,L);
+  updateCounter(r,beat);movePlayhead(r,beat);if(ui.phone)updatePhoneCue(r,beat,L);
+}
+function drawTop(r,beat,L){const T=$("#lToks");if(!T)return;const D=r.D;const cur=r.formations[L.i];const spotId=ui.mode==="spot"?ui.spot:null;
+  $$(".tok",T).forEach(g=>{const id=g.dataset.id;const p=posAt(r,beat,id);g.setAttribute("transform",`translate(${p.x.toFixed(3)} ${(D-p.y).toFixed(3)})`);
+    g.classList.toggle("sel",ui.mode==="edit"&&ui.sel.has(id));g.classList.toggle("me",spotId===id);g.classList.toggle("dim",!!spotId&&spotId!==id);
+    const mv=L.moving?"":(cur.moves[id]||(cur.motion&&motions[cur.motion[id]]?"▶ "+motions[cur.motion[id]].name:""));const t=$(".mv",g);if(t.textContent!==mv)t.textContent=mv});
+  const P=$("#lPaths");if(!P)return;let h="";
+  if(ui.showPaths&&!ui.playing&&!L.moving){const prev=r.formations[L.i-1],next=r.formations[L.i+1];
+    castOf(r).forEach(d=>{if(spotId&&spotId!==d.id)return;const a=posIn(r,cur,d.id);
+      if(prev){const p=posIn(r,prev,d.id);if(Math.hypot(p.x-a.x,p.y-a.y)>.2)h+=`<circle class="ghost" cx="${p.x}" cy="${D-p.y}" r=".95" stroke="${d.color}"/><line class="path" x1="${p.x}" y1="${D-p.y}" x2="${a.x}" y2="${D-a.y}" stroke="${d.color}"/>`}
+      if(spotId&&next){const n=posIn(r,next,d.id);if(Math.hypot(n.x-a.x,n.y-a.y)>.2)h+=`<line class="path" x1="${a.x}" y1="${D-a.y}" x2="${n.x}" y2="${D-n.y}" stroke="#fff" marker-end=""/><circle cx="${n.x}" cy="${D-n.y}" r=".35" fill="#fff" opacity=".8"/>`}})}
+  P.innerHTML=h}
+
+/* ----- 3D audience view (canvas projection) ----- */
+function draw3d(r,beat,L){const cv=$("#stage3d");if(!cv)return;const box=cv.getBoundingClientRect();const w=Math.max(280,box.width||cv.parentElement.clientWidth-20),h=Math.round(w*0.56);const dpr=window.devicePixelRatio||1;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px"}
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);const css=getComputedStyle(document.documentElement);
+  const bg=css.getPropertyValue("--stage").trim(),fl=css.getPropertyValue("--stage-2").trim(),mark=css.getPropertyValue("--stage-mark").trim();
+  c.fillStyle=bg;c.fillRect(0,0,w,h);const{W,D}=r;const pr=makeProj(w,h,W,D);
+  c.beginPath();[[-W/2,0],[W/2,0],[W/2,D],[-W/2,D]].forEach(([x,y],k)=>{const p=pr(x,y,0);k?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])});c.closePath();c.fillStyle=fl;c.fill();
+  c.lineWidth=1;c.strokeStyle="rgba(255,255,255,.07)";
+  for(let x=-W/2;x<=W/2;x+=2){const a=pr(x,0,0),b=pr(x,D,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}
+  for(let y=0;y<=D;y+=2){const a=pr(-W/2,y,0),b=pr(W/2,y,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}
+  c.strokeStyle=mark;c.globalAlpha=.5;c.setLineDash([4,4]);{const a=pr(0,0,0),b=pr(0,D,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}c.setLineDash([]);c.globalAlpha=1;
+  const spotId=ui.mode==="spot"?ui.spot:null;const cur=r.formations[L.i];
+  const ds=castOf(r).map(d=>({d,p:posAt(r,beat,d.id)})).sort((a,b)=>b.p.y-a.p.y);
+  c.textAlign="center";
+  ds.forEach(({d,p})=>{const H=(d.height||66)/12;const base=pr(p.x,p.y,0),top=pr(p.x,p.y,H*0.84),head=pr(p.x,p.y,H*0.93);const s=base[2];
+    c.globalAlpha=spotId&&spotId!==d.id?.3:1;
+    c.fillStyle="rgba(0,0,0,.35)";c.beginPath();c.ellipse(base[0],base[1],0.75*s,0.22*s,0,0,Math.PI*2);c.fill();
+    const mo=motionAt(r,L,beat,d.id);if(mo){if(spotId===d.id){c.strokeStyle="#fff";c.lineWidth=2;c.beginPath();c.ellipse(base[0],base[1],0.95*s,0.3*s,0,0,Math.PI*2);c.stroke()}const hd=drawFigure(c,pr,p,mo.joints,(H*0.93)/mo.ref,d.color);c.fillStyle="#e9e2f6";c.font=`600 ${Math.max(9,Math.min(13,0.34*s))}px Manrope, system-ui, sans-serif`;c.fillText(shortName(d.name),hd[0],hd[1]-0.5*s);return}
+    const bw=0.62*s;c.fillStyle=d.color;c.beginPath();c.moveTo(base[0]-bw*0.55,base[1]);c.lineTo(top[0]-bw*0.5,top[1]+bw*0.4);c.quadraticCurveTo(top[0],top[1]-bw*0.1,top[0]+bw*0.5,top[1]+bw*0.4);c.lineTo(base[0]+bw*0.55,base[1]);c.closePath();c.fill();
+    c.beginPath();c.arc(head[0],head[1],0.3*s,0,Math.PI*2);c.fill();
+    if(spotId===d.id){c.strokeStyle="#fff";c.lineWidth=2;c.beginPath();c.ellipse(base[0],base[1],0.95*s,0.3*s,0,0,Math.PI*2);c.stroke()}
+    c.fillStyle="#e9e2f6";c.font=`600 ${Math.max(9,Math.min(13,0.34*s))}px Manrope, system-ui, sans-serif`;c.fillText(shortName(d.name),head[0],head[1]-0.42*s);
+    const mv=L.moving?"":cur.moves[d.id];if(mv){c.fillStyle=mark;c.font=`700 ${Math.max(8,Math.min(11,0.28*s))}px Manrope, system-ui, sans-serif`;c.fillText(mv,base[0],base[1]+0.55*s+6)}});
+  c.globalAlpha=1;c.fillStyle="rgba(233,226,246,.45)";c.font="700 10px Manrope, system-ui, sans-serif";c.fillText("YOU ARE IN THE AUDIENCE",w/2,h-6)}
+
+
+/* ---------------- motion capture: shared helpers ---------------- */
+const MP_J=[0,11,12,13,14,15,16,23,24,25,26,27,28,31,32]; /* nose, shoulders, elbows, wrists, hips, knees, ankles, toes */
+const FIG_SEGS=[[1,3,.12],[3,5,.1],[2,4,.12],[4,6,.1],[7,9,.17],[9,11,.14],[11,13,.09],[8,10,.17],[10,12,.14],[12,14,.09]];
+function makeProj(w,h,W,D){const cy=D*0.75,hz=h*0.12;const f=0.94*w*cy/W;const ch=(0.9*h-hz)*cy/f;return(x,y,z)=>{const d=Math.max(.5,y+cy);return[w/2+f*x/d,hz+f*(ch-z)/d,f/d]}}
+function clipFrame(cl,t){const n=cl.n;const fi=clamp(t*cl.fps,0,n-1);const i=Math.floor(fi),u=fi-i,j=Math.min(i+1,n-1);const D=cl.data,out=[];
+  for(let k=0;k<15;k++){const a=(i*15+k)*3,b=(j*15+k)*3;out.push([(D[a]+(D[b]-D[a])*u)/1000,(D[a+1]+(D[b+1]-D[a+1])*u)/1000,(D[a+2]+(D[b+2]-D[a+2])*u)/1000])}return out}
+function motionAt(r,L,beat,id){const f=r.formations[L.i];const cid=f.motion&&f.motion[id];const cl=cid&&motions[cid];if(!cl||!cl.data)return null;
+  const t=(beat-starts(r)[L.i])*60/r.bpm;return{joints:clipFrame(cl,Math.max(0,t)),ref:cl.ref||1.5}}
+/* draws a capsule-limbed body; joints are [x right, h up, d upstage] in meters, k converts to stage feet */
+function drawFigure(c,pr,p,J,k,color){const Wp=J.map(([x,h,d])=>({X:p.x+x*k,Y:p.y+d*k,Z:h*k}));const P=Wp.map(q=>pr(q.X,q.Y,q.Z));const edge="rgba(12,7,24,.6)";
+  const path=pts=>{c.beginPath();pts.forEach((q,n)=>n?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]))};
+  const limb=(pts,lw,closed)=>{path(pts);if(closed)c.closePath();c.strokeStyle=edge;c.lineWidth=lw+2.2;c.stroke();if(closed){c.fillStyle=color;c.fill()}c.strokeStyle=color;c.lineWidth=lw;c.stroke()};
+  const items=[];FIG_SEGS.forEach(([a,b,w])=>items.push({dep:(Wp[a].Y+Wp[b].Y)/2,go:()=>limb([P[a],P[b]],Math.max(1.5,w*k*P[a][2]))}));
+  items.push({dep:(Wp[1].Y+Wp[2].Y+Wp[7].Y+Wp[8].Y)/4+0.02,go:()=>limb([P[1],P[2],P[8],P[7]],Math.max(2,.1*k*P[1][2]),true)});
+  const sm={X:(Wp[1].X+Wp[2].X)/2,Y:(Wp[1].Y+Wp[2].Y)/2,Z:(Wp[1].Z+Wp[2].Z)/2};const hc={X:Wp[0].X,Y:Wp[0].Y+0.07*k,Z:Wp[0].Z+0.02*k};const HP=pr(hc.X,hc.Y,hc.Z),SP=pr(sm.X,sm.Y,sm.Z);const hr=Math.max(3,0.115*k*HP[2]);
+  items.push({dep:hc.Y,go:()=>{limb([SP,HP],Math.max(1.5,.09*k*SP[2]));c.beginPath();c.arc(HP[0],HP[1],hr,0,Math.PI*2);c.fillStyle=color;c.fill();c.strokeStyle=edge;c.lineWidth=1.6;c.stroke()}});
+  c.save();c.lineCap="round";c.lineJoin="round";items.sort((a,b)=>b.dep-a.dep).forEach(it=>it.go());c.restore();
+  return[HP[0],HP[1]-hr]}
+
+/* ----- stage interaction ----- */
+let drag=null;
+function svgPt(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();if(!m)return{x:0,y:0};const p=pt.matrixTransform(m.inverse());return{x:p.x,y:R().D-p.y}}
+function bindStage(svg){
+  svg.onpointerdown=e=>{if(ui.mode!=="edit"||!canWrite)return;const r=R();stop();const L=locate(r,ui.beat);if(L.moving){seekFormation(L.i);}
+    const tok=e.target.closest(".tok");const p=svgPt(svg,e);
+    if(tok){const id=tok.dataset.id;if(e.shiftKey||e.metaKey||e.ctrlKey){ui.sel.has(id)?ui.sel.delete(id):ui.sel.add(id)}else if(!ui.sel.has(id)){ui.sel.clear();ui.sel.add(id)}
+      const f=r.formations[ui.f];const orig={};ui.sel.forEach(i=>orig[i]={...posIn(r,f,i)});drag={kind:"move",start:p,orig,moved:false}}
+    else{if(!(e.shiftKey||e.metaKey||e.ctrlKey))ui.sel.clear();drag={kind:"marq",start:p}}
+    svg.setPointerCapture(e.pointerId);drawFrame();renderInspector()};
+  svg.onpointermove=e=>{if(!drag)return;const r=R();const p=svgPt(svg,e);const f=r.formations[ui.f];
+    if(drag.kind==="move"){let dx=p.x-drag.start.x,dy=p.y-drag.start.y;if(!drag.moved&&Math.hypot(dx,dy)<.15)return;if(!drag.moved){pushUndo();drag.moved=true}
+      const st=ui.snap?.5:.1;for(const id in drag.orig){const o=drag.orig[id];f.pos[id]={x:+clamp(Math.round((o.x+dx)/st)*st,-r.W/2+.5,r.W/2-.5).toFixed(2),y:+clamp(Math.round((o.y+dy)/st)*st,.5,r.D-.5).toFixed(2)}}drawFrame()}
+    else{const m=$("#marq");const x1=Math.min(drag.start.x,p.x),x2=Math.max(drag.start.x,p.x),y1=Math.min(drag.start.y,p.y),y2=Math.max(drag.start.y,p.y);m.hidden=false;
+      m.setAttribute("x",x1);m.setAttribute("y",r.D-y2);m.setAttribute("width",x2-x1);m.setAttribute("height",y2-y1);drag.box=[x1,x2,y1,y2]}};
+  const end=()=>{if(!drag)return;const r=R();if(drag.kind==="move"&&drag.moved){saveRoutine(r);renderTimeline()}
+    if(drag.kind==="marq"&&drag.box){const[x1,x2,y1,y2]=drag.box;const f=r.formations[ui.f];r.cast.forEach(id=>{const p=posIn(r,f,id);if(p.x>=x1&&p.x<=x2&&p.y>=y1&&p.y<=y2)ui.sel.add(id)});$("#marq").hidden=true}
+    drag=null;drawFrame();renderInspector()};
+  svg.onpointerup=end;svg.onpointercancel=end;
+}
+function seekFormation(i){const r=R();ui.f=i;ui.beat=starts(r)[i];const au=$("#au");if(hasSong()&&!ui.playing){try{au.currentTime=Math.max(0,beatToSec(r,ui.beat))}catch(e){}}}
+
+/* ----- transport ----- */
+function renderTransport(){const r=R();const t=$("#transport");if(!t||!r)return;
+  const song=hasSong();
+  t.innerHTML=`
+    <button class="btn" id="tPrev" aria-label="Previous formation" title="Previous formation ( [ )">◀︎</button>
+    <button class="btn pri" id="tPlay" aria-label="${ui.playing?"Pause":"Play"}">${ui.playing?"❚❚ Pause":"▶︎ Play"}</button>
+    <button class="btn" id="tNext" aria-label="Next formation" title="Next formation ( ] )">▶︎</button>
+    <div class="counter" aria-live="off"><span class="big" id="cEight">1·1</span><div class="dots" id="cDots">${"<span></span>".repeat(8)}</div><span class="sm" id="cTime">0:00</span></div>
+    <div class="spacer"></div>
+    <span class="sm hint" style="color:rgba(233,226,246,.7)">${song?"♪ "+esc(r.songName||"Song loaded"):r.songName?"♪ Load your copy of “"+esc(r.songName)+"”":"No song yet"}</span>
+    <button class="btn sm" id="tSong">${song?"Change song":"Load song"}</button>`;
+  $("#tPlay").onclick=toggle;$("#tPrev").onclick=()=>step(-1);$("#tNext").onclick=()=>step(1);$("#tSong").onclick=()=>$("#songFile").click();
+  updateCounter(r,ui.beat)}
+function updateCounter(r,beat){const e=eightLabel(beat);const a=$("#cEight");if(!a)return;a.textContent=`${e.eight}·${e.count}`;
+  $$("#cDots span").forEach((s,k)=>s.classList.toggle("on",k<e.count));$("#cTime").textContent=`${fmtTime(beatToSec(r,beat))}${r.songDur?" / "+fmtTime(r.songDur):""}`}
+function step(d){stop();const r=R();const L=locate(r,ui.beat);seekFormation(clamp(L.i+d,0,r.formations.length-1));ui.sel.clear();drawFrame();renderInspector();renderTimeline()}
+let raf=0,clock0=0,beat0=0;
+function toggle(){ui.playing?stop():play()}
+function play(){const r=R();if(!r||!r.formations.length)return;const tot=totalBeats(r);if(ui.beat>=tot-.01)ui.beat=0;ui.playing=true;ui.sel.clear();
+  const au=$("#au");if(hasSong()){try{au.currentTime=Math.max(0,beatToSec(r,ui.beat));au.playbackRate=1}catch(e){}au.play().catch(()=>{toast("Tap play again to start the song")});}
+  clock0=performance.now();beat0=ui.beat;renderTransport();phoneControls();const loop=()=>{if(!ui.playing)return;const r=R();
+    if(hasSong()&&!au.paused){ui.beat=secToBeat(r,au.currentTime)}else{ui.beat=beat0+(performance.now()-clock0)/1000*r.bpm/60}
+    const tot=totalBeats(r);if(!hasSong()&&ui.beat>=tot){ui.beat=tot;stop();return}if(hasSong()&&au.ended){stop();return}
+    drawFrame();raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop)}
+function stop(){if(!ui.playing)return;ui.playing=false;cancelAnimationFrame(raf);const au=$("#au");try{au.pause()}catch(e){}
+  phoneControls();
+  if(ui.tab==="stage"&&R()){const r=R();ui.beat=clamp(ui.beat,0,totalBeats(r));renderTransport();drawFrame();renderTimeline();renderInspector()}}
+
+$("#songFile").addEventListener("change",async e=>{const file=e.target.files[0];e.target.value="";if(!file)return;const r=R();if(!r)return;stop();
+  await idb.put(r.id,file);songFor=null;await loadSongFor(r);const au=$("#au");
+  au.onloadedmetadata=()=>{if(canWrite){r.songName=file.name;r.songDur=Math.round(au.duration||0);saveRoutine(r)}renderTransport();renderInspector()};
+  toast(`Loaded ${file.name}`);renderTransport()});
+
+/* ----- timeline ----- */
+const PX=11;
+function renderTimeline(){const r=R();const t=$("#timeline");if(!t||!r)return;const tot=totalBeats(r);const s=starts(r);
+  const songBeats=r.songDur?Math.max(0,secToBeat(r,r.songDur)):0;const width=Math.max(tot,songBeats)*PX+70;
+  let ruler="";for(let b=0;b<=Math.max(tot,songBeats);b+=8)ruler+=`<span style="left:${b*PX}px">${b/8+1}</span>`;
+  t.innerHTML=`<div class="tlhead"><span class="lbl">Timeline · 8-counts</span><span class="hint mono">${r.formations.length} formations · ${Math.ceil(tot/8)} eights · ${fmtTime(beatToSec(r,tot)-r.offset)}</span><div class="spacer"></div>
+    <span class="hint">Solid = hold, striped = transition</span></div>
+    <div class="tlscroll" id="tlScroll"><div class="tlinner" style="width:${width}px">
+      <div class="ruler" id="ruler">${ruler}</div>
+      <div class="blocks">${r.formations.map((f,i)=>{const last=i===r.formations.length-1;return `<div class="blk ${i===ui.f?"cur":""}" data-i="${i}" title="${esc(f.name)}"><div class="h" style="width:${f.hold*PX}px"><b>${esc(f.name)}${f.notes?`<span class="nt" title="Has notes"></span>`:""}</b><small>${f.hold}${!last&&f.trans?" + "+f.trans:""}</small></div>${!last&&f.trans?`<div class="t" style="width:${f.trans*PX}px"></div>`:""}</div>`}).join("")}
+      <button class="addblk w" id="addF" title="Add formation" aria-label="Add formation">+</button></div>
+      <div class="playhead" id="playhead"></div></div></div>`;
+  $$(".blk",t).forEach(b=>b.onclick=()=>{stop();seekFormation(+b.dataset.i);ui.sel.clear();drawFrame();renderInspector();renderTimeline()});
+  $("#ruler",t).onclick=e=>{stop();const rect=e.currentTarget.getBoundingClientRect();ui.beat=clamp((e.clientX-rect.left)/PX,0,tot);const au=$("#au");if(hasSong())try{au.currentTime=Math.max(0,beatToSec(r,ui.beat))}catch(_){} drawFrame();renderInspector();renderTimeline()};
+  const a=$("#addF",t);if(a)a.onclick=addFormation;movePlayhead(r,ui.beat)}
+function movePlayhead(r,beat){const p=$("#playhead");if(!p)return;p.style.left=(beat*PX)+"px";
+  if(ui.playing){const sc=$("#tlScroll");const x=beat*PX;if(x>sc.scrollLeft+sc.clientWidth-60||x<sc.scrollLeft)sc.scrollLeft=x-60}
+  $$(".blk").forEach(b=>b.classList.toggle("cur",+b.dataset.i===locate(r,beat).i))}
+function addFormation(){const r=R();pushUndo();const cur=r.formations[ui.f];const f={id:uid(),name:`Formation ${r.formations.length+1}`,hold:8,trans:8,notes:"",pos:clone(cur.pos),moves:{}};
+  r.formations.splice(ui.f+1,0,f);seekFormation(ui.f+1);saveRoutine(r);renderTimeline();drawFrame();renderInspector();toast("Formation added. Drag dancers to their new spots.")}
+
+/* ----- inspector ----- */
+function renderInspector(){const el=$("#inspector");const r=R();if(!el||!r)return;if(el.contains(document.activeElement)&&document.activeElement.matches("input,textarea"))return;
+  if(ui.mode==="spot"){renderSpotPanel(el,r);return}
+  if(!castOf(r).length)return;
+  const f=r.formations[ui.f];const sel=[...ui.sel].map(dancer).filter(Boolean);const last=ui.f===r.formations.length-1;
+  el.innerHTML=`
+  <div class="sec">
+    <span class="lbl">Formation ${ui.f+1}</span>
+    <input type="text" id="iName" value="${esc(f.name)}" aria-label="Formation name" style="font-weight:700;font-size:15px">
+    <div class="row2"><label class="f">Hold (counts)<input type="number" id="iHold" min="1" max="128" value="${f.hold}"></label>
+    <label class="f">Transition to next${last?" (last)":""}<input type="number" id="iTrans" min="0" max="64" value="${f.trans}" ${last?"disabled":""}></label></div>
+    <label class="f">Notes for dancers<textarea id="iNotes" rows="2" placeholder="e.g. Arms up on 3, look stage left on 7">${esc(f.notes)}</textarea></label>
+    <div class="row"><button class="btn sm" id="iUp" ${ui.f===0?"disabled":""}>Move earlier</button><button class="btn sm" id="iDown" ${last?"disabled":""}>Move later</button><button class="btn sm" id="iDupF">Duplicate</button><button class="btn sm danger" id="iDelF" ${r.formations.length<2?"disabled":""}>Delete</button></div>
+  </div>
+  <div class="sec">
+    <span class="lbl">${sel.length?`${sel.length} selected`:"Dancers"}</span>
+    ${sel.length?`<div class="chips">${sel.map(d=>`<span class="chip" style="display:inline-flex;gap:6px;align-items:center"><span class="sw" style="background:${d.color}"></span>${esc(d.name)}</span>`).join("")}</div>
+      <div class="row"><button class="btn sm" data-al="row">Line up</button><button class="btn sm" data-al="col">Stack</button><button class="btn sm" data-al="spread">Even spacing</button><button class="btn sm" data-al="mirror">Mirror</button><button class="btn sm" data-al="center">Center</button></div>
+      <label class="f">Move from the library<select id="iMove"><option value="">Choose a move…</option>${MOVES.map(m=>`<option>${m}</option>`).join("")}<option value="__custom">Custom…</option><option value="__clear">Clear move</option></select></label>
+      <label class="f">3D motion clip<select id="iClip"><option value="">Choose a clip…</option>${Object.values(motions).sort((a,b)=>a.created-b.created).map(c=>`<option value="${c.id}">${esc(c.name)} · ${c.dur.toFixed(1)}s</option>`).join("")}<option value="__none">Remove motion</option></select></label>`
+    :`<p class="hint">Click a dancer to select. Shift-click or drag a box to select several. Arrow keys nudge by half a foot.</p>`}
+    <div class="row"><span class="hint">Select by color:</span>${[...new Set(castOf(r).map(d=>d.color))].map(c=>`<button class="sw" style="background:${c};border:0;width:18px;height:18px" data-col="${c}" aria-label="Select dancers in this color"></button>`).join("")}<button class="btn sm ghost" id="iAll">All</button></div>
+  </div>
+  <div class="sec">
+    <span class="lbl">Templates</span>
+    <span class="hint">Tap one to arrange ${sel.length?`the ${sel.length} selected dancers`:"everyone"} in this formation.</span>
+    <label class="row hint"><input type="checkbox" id="iShort" ${ui.shortFront?"checked":""}> Shortest dancers in front</label>
+    ${templateGallery(r,sel.length||castOf(r).length)}
+  </div>
+  <div class="sec">
+    <span class="lbl">Motion library</span>
+    ${Object.keys(motions).length?`<div>${Object.values(motions).sort((a,b)=>a.created-b.created).map(c=>{const used=castOf(r).filter(d=>(f.motion||{})[d.id]===c.id).length;return `<div class="clip"><b title="${esc(c.name)}">${esc(c.name)}</b><span class="hint mono">${c.dur.toFixed(1)}s${used?" · "+used+" here":""}</span><button class="btn sm ghost danger" data-delclip="${c.id}" aria-label="Delete ${esc(c.name)}">✕</button></div>`}).join("")}</div>`:`<p class="hint">Record someone doing the choreography and 8Count turns it into 3D motion your whole team can watch on stage.</p>`}
+    <button class="btn sm pri" id="iMotion" style="align-self:start">Turn video into motion</button>
+  </div>
+  <div class="sec" id="aiSec" ${sampler?"":"hidden"}>
+    <span class="lbl">Formation ideas</span>
+    <textarea id="iAi" rows="2" placeholder="Describe it: dramatic entrance, captains in front, two lines that open up"></textarea>
+    <div class="row"><button class="btn sm pri" id="iAiGo">Suggest a formation</button><span class="hint" id="iAiMsg"></span></div>
+  </div>
+  <div class="sec">
+    <span class="lbl">Music & stage</span>
+    <div class="row2"><label class="f">Tempo (BPM)<input type="number" id="iBpm" min="40" max="220" value="${r.bpm}"></label><label class="f">Count 1 starts at (sec)<input type="number" id="iOff" step="0.05" min="0" value="${r.offset}"></label></div>
+    <div class="row"><button class="btn sm" id="iTap">Tap tempo</button><button class="btn sm" id="iHere" ${hasSong()?"":"disabled"} title="Play the song, pause on count 1, then press">Count 1 = song position</button></div>
+    <div class="row2"><label class="f">Stage width (ft)<input type="number" id="iW" min="12" max="80" step="2" value="${r.W}"></label><label class="f">Stage depth (ft)<input type="number" id="iD" min="8" max="60" step="2" value="${r.D}"></label></div>
+    <div class="row"><label class="row hint"><input type="checkbox" id="iPaths" ${ui.showPaths?"checked":""}> Show paths</label><label class="row hint"><input type="checkbox" id="iSnap" ${ui.snap?"checked":""}> Snap to grid</label></div>
+    <span class="hint"><span class="kbd">Space</span> play · <span class="kbd">[</span> <span class="kbd">]</span> formations · <span class="kbd">Ctrl Z</span> undo</span>
+  </div>`;
+  bindInspector(el,r,f)}
+function bindInspector(el,r,f){const sv=()=>{saveRoutine(r);renderTimeline()};let undoArmed=null;const arm=k=>{if(undoArmed!==k){pushUndo();undoArmed=k}};
+  $("#iName",el).oninput=e=>{arm("n");f.name=e.target.value||"Untitled";sv();drawFrame()};
+  $("#iHold",el).onchange=e=>{pushUndo();f.hold=clamp(Math.round(+e.target.value||8),1,128);sv();drawFrame()};
+  const tr=$("#iTrans",el);tr.onchange=e=>{pushUndo();f.trans=clamp(Math.round(+e.target.value||0),0,64);sv()};
+  $("#iNotes",el).oninput=e=>{arm("t");f.notes=e.target.value;sv()};
+  $("#iUp",el).onclick=()=>moveF(-1);$("#iDown",el).onclick=()=>moveF(1);
+  $("#iDupF",el).onclick=()=>{pushUndo();const c=clone(f);c.id=uid();c.name+=" (copy)";r.formations.splice(ui.f+1,0,c);seekFormation(ui.f+1);saveRoutine(r);renderTimeline();drawFrame();renderInspector()};
+  $("#iDelF",el).onclick=()=>{if(r.formations.length<2)return;pushUndo();r.formations.splice(ui.f,1);seekFormation(Math.max(0,ui.f-1));saveRoutine(r);renderTimeline();drawFrame();renderInspector();toast("Formation deleted · Ctrl+Z to undo")};
+  $$("[data-al]",el).forEach(b=>b.onclick=()=>align(b.dataset.al));
+  const mv=$("#iMove",el);if(mv)mv.onchange=e=>{let v=e.target.value;if(!v)return;const apply=val=>{pushUndo();ui.sel.forEach(id=>{if(val)f.moves[id]=val;else delete f.moves[id]});saveRoutine(r);drawFrame();renderInspector()};
+    if(v==="__custom")promptBox("Name the move","","Add",apply);else apply(v==="__clear"?"":v)};
+  const ic=$("#iClip",el);if(ic)ic.onchange=e=>{const v=e.target.value;if(!v)return;pushUndo();f.motion=f.motion||{};ui.sel.forEach(id=>{if(v==="__none")delete f.motion[id];else f.motion[id]=v});saveRoutine(r);if(v!=="__none"&&ui.view!=="3d"){ui.view="3d";render();toast("Showing the 3D audience view. Press play to watch.")}else{drawFrame();renderInspector()}};
+  $("#iMotion",el).onclick=openMotionStudio;
+  $$("[data-delclip]",el).forEach(b=>b.onclick=()=>{const c=motions[b.dataset.delclip];confirmBox(`Delete “${c.name}”?`,"It will be removed from every formation that uses it.","Delete",()=>{deleteMotion(c.id);drawFrame();renderInspector()})});
+  $$("[data-col]",el).forEach(b=>b.onclick=()=>{ui.sel=new Set(castOf(r).filter(d=>d.color===b.dataset.col).map(d=>d.id));drawFrame();renderInspector()});
+  $("#iAll",el).onclick=()=>{ui.sel=new Set(r.cast);drawFrame();renderInspector()};
+  $("#iShort",el).onchange=e=>ui.shortFront=e.target.checked;
+  $$("[data-tpl]",el).forEach(b=>b.onclick=()=>{const ids=ui.sel.size?[...ui.sel]:r.cast.slice();pushUndo();const pts=template(b.dataset.tpl,ids.length,r.W,r.D);Object.assign(f.pos,assign(r,pts,ids));saveRoutine(r);drawFrame();toast(`${b.dataset.name} applied · Ctrl+Z to undo`)});
+  const ai=$("#iAiGo",el);if(ai)ai.onclick=()=>aiIdea($("#iAi",el).value.trim());
+  $("#iBpm",el).onchange=e=>{pushUndo();r.bpm=clamp(+e.target.value||100,40,220);sv();drawFrame()};
+  $("#iOff",el).onchange=e=>{pushUndo();r.offset=Math.max(0,+e.target.value||0);sv();drawFrame()};
+  let taps=[];$("#iTap",el).onclick=()=>{const t=performance.now();taps=taps.filter(x=>t-x<2500);taps.push(t);if(taps.length>=4){const iv=(taps[taps.length-1]-taps[0])/(taps.length-1);const bpm=Math.round(60000/iv);r.bpm=clamp(bpm,40,220);$("#iBpm",el).value=r.bpm;saveRoutine(r);renderTimeline();toast(`Tempo set to ${r.bpm} BPM`)}else toast(`Keep tapping on the beat (${taps.length}/4)`)};
+  $("#iHere",el).onclick=()=>{pushUndo();r.offset=+$("#au").currentTime.toFixed(2);$("#iOff",el).value=r.offset;ui.beat=0;sv();drawFrame();toast("Count 1 now lines up with the song")};
+  $("#iW",el).onchange=e=>{pushUndo();r.W=clamp(Math.round((+e.target.value||32)/2)*2,12,80);saveRoutine(r);buildStage();drawFrame()};
+  $("#iD",el).onchange=e=>{pushUndo();r.D=clamp(Math.round((+e.target.value||24)/2)*2,8,60);saveRoutine(r);buildStage();drawFrame()};
+  $("#iPaths",el).onchange=e=>{ui.showPaths=e.target.checked;drawFrame()};
+  $("#iSnap",el).onchange=e=>ui.snap=e.target.checked}
+function templateGallery(r,n){n=Math.max(n,1);const{W,D}=r;
+  return TEMPLATE_GROUPS.map(([title,items])=>`<div class="tcat"><span>${esc(title.replace("{n}",n))}</span><span class="mono">${items.length}</span></div>
+    <div class="tgrid">${items.map(([k,name])=>`<button class="tcard" data-tpl="${k}" data-name="${esc(name)}" title="${esc(name)}"><svg viewBox="${-W/2} 0 ${W} ${D}" aria-hidden="true"><rect x="${-W/2}" y="0" width="${W}" height="${D}" rx="1.2" class="tfl"/>${template(k,n,W,D).map(p=>`<circle cx="${p.x}" cy="${D-p.y}" r="${n>14?.55:.75}" class="tdot"/>`).join("")}</svg><span>${esc(name)}</span></button>`).join("")}</div>`).join("")}
+function moveF(d){const r=R();const j=ui.f+d;if(j<0||j>=r.formations.length)return;pushUndo();const a=r.formations;[a[ui.f],a[j]]=[a[j],a[ui.f]];seekFormation(j);saveRoutine(r);renderTimeline();drawFrame();renderInspector()}
+function align(kind){const r=R();const f=r.formations[ui.f];const ids=[...ui.sel];if(!ids.length)return;pushUndo();const P=ids.map(id=>({id,...posIn(r,f,id)}));
+  const avg=k=>P.reduce((s,p)=>s+p[k],0)/P.length;
+  if(kind==="row"){const y=+avg("y").toFixed(1);P.sort((a,b)=>a.x-b.x);const sp=P.length>1?Math.max(2,(Math.max(...P.map(p=>p.x))-Math.min(...P.map(p=>p.x)))/(P.length-1)):0;const cx=avg("x");P.forEach((p,k)=>f.pos[p.id]={x:+clamp(cx+(k-(P.length-1)/2)*sp,-r.W/2+.5,r.W/2-.5).toFixed(1),y})}
+  if(kind==="col"){const x=+avg("x").toFixed(1);P.sort((a,b)=>a.y-b.y);const cy=avg("y");P.forEach((p,k)=>f.pos[p.id]={x,y:+clamp(cy+(k-(P.length-1)/2)*2.5,.5,r.D-.5).toFixed(1)})}
+  if(kind==="spread"){const horiz=(Math.max(...P.map(p=>p.x))-Math.min(...P.map(p=>p.x)))>=(Math.max(...P.map(p=>p.y))-Math.min(...P.map(p=>p.y)));const k1=horiz?"x":"y";P.sort((a,b)=>a[k1]-b[k1]);const lo=P[0][k1],hi=P[P.length-1][k1];P.forEach((p,k)=>{const v=P.length>1?lo+(hi-lo)*k/(P.length-1):lo;f.pos[p.id]={...posIn(r,f,p.id),[k1]:+v.toFixed(1)}})}
+  if(kind==="mirror"){P.forEach(p=>f.pos[p.id]={x:+(-p.x).toFixed(1),y:p.y})}
+  if(kind==="center"){const dx=avg("x");P.forEach(p=>f.pos[p.id]={x:+(p.x-dx).toFixed(1),y:p.y})}
+  saveRoutine(r);drawFrame()}
+
+async function aiIdea(desc){const r=R();const msg=$("#iAiMsg");if(!sampler)return;const f=r.formations[ui.f];const cast=castOf(r);if(!cast.length)return;
+  msg.textContent="Thinking…";const btn=$("#iAiGo");btn.disabled=true;
+  const roster=cast.map(d=>({name:d.name,height_in:d.height||66,role:d.role||"Dancer"}));
+  const prompt=`You design stage formations for a college Bollywood dance team. Stage is ${r.W} ft wide and ${r.D} ft deep. Coordinates: x from ${-r.W/2+1} (stage right, audience's left) to ${r.W/2-1} (stage left), 0 is center; y from 1 (front, nearest audience) to ${r.D-1} (back). Keep dancers at least 2 ft apart and visible to the audience (use windows). Dancers: ${JSON.stringify(roster)}. Previous formation positions: ${JSON.stringify(cast.map(d=>({name:d.name,...posIn(r,f,d.id)})))}.
+Request: ${desc||"a fresh, visually interesting formation that flows from the previous one"}.
+Reply with JSON only: {"name": short formation name, "positions":[{"name": dancer name exactly as given, "x": number, "y": number}], "tip": one short sentence for the choreographer}.`;
+  try{const out=await sampler.json(prompt,{modelTier:"default"});const pos={};(out.positions||[]).forEach(p=>{const d=cast.find(c=>c.name===p.name);if(d&&isFinite(p.x)&&isFinite(p.y))pos[d.id]={x:+clamp(+p.x,-r.W/2+.5,r.W/2-.5).toFixed(1),y:+clamp(+p.y,.5,r.D-.5).toFixed(1)}});
+    if(!Object.keys(pos).length)throw{code:"empty"};pushUndo();Object.assign(f.pos,pos);if(out.name&&/^Formation \d+$/.test(f.name))f.name=String(out.name).slice(0,40);saveRoutine(r);drawFrame();renderTimeline();renderInspector();
+    const m2=$("#iAiMsg");if(m2)m2.textContent=out.tip?String(out.tip).slice(0,160):"Applied. Ctrl+Z to undo."}
+  catch(e){const c=e&&e.code;msg.textContent=c==="not_granted"?"Formation ideas are turned off for this page.":c==="rate_limited"?"Too many requests. Try again in a minute.":"Couldn't get an idea this time. Try rephrasing.";if(c==="not_granted"){sampler=null;$("#aiSec").hidden=true}}
+  finally{const b=$("#iAiGo");if(b)b.disabled=false}}
+
+/* ----- My spot panel ----- */
+function renderSpotPanel(el,r){const cast=castOf(r);const me=cast.find(d=>d.id===ui.spot);const s=starts(r);
+  el.innerHTML=`<div class="sec"><span class="lbl">My spot</span>
+    <select id="spSel" aria-label="Who are you?"><option value="">Who are you?</option>${cast.map(d=>`<option value="${d.id}" ${d.id===ui.spot?"selected":""}>${esc(d.name)}</option>`).join("")}</select>
+    ${me?`<p class="hint">You're highlighted in white. Lines show where you came from and where you go next.</p>`:`<p class="hint">Pick your name to see your position on every count.</p>`}</div>
+  ${me?`<div class="sec"><span class="lbl">Your cue sheet</span>${r.formations.map((f,i)=>{const p=posIn(r,f,me.id);const e=eightLabel(s[i]);return `<div class="cue ${i===ui.f?"cur":""}" data-i="${i}"><span class="n">${e.eight}·${e.count}</span><b>${esc(f.name)}</b><span class="p">${esc(describePos(r,p))}</span><span class="m">${f.moves[me.id]?"Move: "+esc(f.moves[me.id])+" · ":""}${f.hold} counts${f.notes?" · "+esc(f.notes):""}</span></div>`}).join("")}</div>`:""}`;
+  $("#spSel",el).onchange=e=>{ui.spot=e.target.value||null;ls.set("8c.spot",ui.spot);drawFrame();renderInspector()};
+  $$(".cue",el).forEach(c=>c.onclick=()=>{stop();seekFormation(+c.dataset.i);drawFrame();renderTimeline();renderInspector()})}
+
+/* ---------------- TEAM TAB ---------------- */
+function renderTeam(m){const r=R();const ro=team.roster;
+  m.innerHTML=`<div class="pagehead"><div><h1>${esc(team.name||"Your team")}</h1><p>Everyone on the roster, their height for back-row planning, and who's in each routine. To send routines to everyone, use Publish to the team below.</p></div><div class="spacer"></div>
+    <label class="f w">Team name<input type="text" id="tName" value="${esc(team.name)}" placeholder="e.g. UMBC Bollywood"></label></div>
+  <div class="statrow"><div class="stat"><b>${ro.length}</b>dancers</div><div class="stat"><b>${(ro.some(d=>d.height)&&fmtHt(ro.reduce((s,d)=>s+(d.height||0),0)/ro.filter(d=>d.height).length))||"–"}</b>average height</div><div class="stat"><b>${sortedRoutines().length}</b>routines</div></div>
+  <div class="tablewrap"><table><thead><tr><th></th><th>Name</th><th>Height</th><th>Role</th><th>Level</th>${r?`<th title="${esc(r.title)}">In “${esc(r.title.length>18?r.title.slice(0,17)+"…":r.title)}”</th>`:""}<th class="w"></th></tr></thead>
+  <tbody>${ro.length?ro.map(d=>`<tr data-id="${d.id}">
+    <td><input type="color" value="${d.color}" data-k="color" aria-label="Color for ${esc(d.name)}" style="width:28px;height:28px;border:0;padding:0;background:none"></td>
+    <td><input type="text" value="${esc(d.name)}" data-k="name" aria-label="Name"></td>
+    <td><input type="text" class="ht" value="${fmtHt(d.height)}" data-k="height" placeholder="5'6&quot;" aria-label="Height"></td>
+    <td><select data-k="role" aria-label="Role">${ROLES.map(x=>`<option ${x===d.role?"selected":""}>${x}</option>`).join("")}</select></td>
+    <td><select data-k="skill" aria-label="Skill level">${SKILLS.map(x=>`<option ${x===d.skill?"selected":""}>${x}</option>`).join("")}</select></td>
+    ${r?`<td><input type="checkbox" data-k="cast" ${r.cast.includes(d.id)?"checked":""} aria-label="Dances in ${esc(r.title)}"></td>`:""}
+    <td class="w"><button class="btn sm ghost danger" data-del>Remove</button></td></tr>`).join(""):`<tr><td colspan="7" class="empty">No dancers yet. Add your team below.</td></tr>`}</tbody></table></div>
+  <section class="panel w" style="margin-top:16px">
+    <span class="lbl">Publish to the team</span>
+    <p style="margin:0;max-width:62ch">Everyone who opens the 8Count site loads the latest team file automatically: routines, roster, rehearsals, costumes and motion clips.</p>
+    <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;max-width:62ch">
+      <li>Download the team file.</li>
+      <li>Open <a href="https://github.com/${REPO}/upload/main" target="_blank" rel="noopener">the upload page of your 8count repo</a>, drop in <b>team.json</b> and press <b>Commit changes</b>.</li>
+      <li>In about a minute, everyone sees the update.</li></ol>
+    <div class="row"><button class="btn pri" id="tExport">Download team file</button><button class="btn" id="tImport">Open a file</button></div>
+  </section>
+  <form class="row w" id="addD" style="margin-top:12px"><input type="text" id="dName" placeholder="Dancer name" required style="flex:1;min-width:160px"><input type="text" id="dHt" placeholder="Height 5'6&quot;" style="width:120px"><button class="btn pri">Add dancer</button></form>
+  <p class="hint w" style="margin-top:8px">Tip: paste a list of names, one per line, into the name box to add several at once.</p>`;
+  if(!canWrite)$$("input,select",m).forEach(i=>i.disabled=true);
+  $("#tExport",m).onclick=()=>{downloadJSON(bundleTeam(),"team.json");toast("Saved team.json. Upload it to GitHub to publish.")};$("#tImport",m).onclick=pickImport;
+  const tn=$("#tName",m);if(tn)tn.oninput=e=>{team.name=e.target.value;$("#teamLabel").textContent=team.name;saveTeam()};
+  $$("tbody tr[data-id]",m).forEach(tr=>{const d=dancer(tr.dataset.id);
+    $$("[data-k]",tr).forEach(inp=>inp.addEventListener("change",e=>{const k=inp.dataset.k;
+      if(k==="cast"){if(!r)return;pushUndo();if(inp.checked){if(!r.cast.includes(d.id)){r.cast.push(d.id);r.formations.forEach(f=>{if(!f.pos[d.id])f.pos[d.id]=defaultSpot(r,d.id)})}}else r.cast=r.cast.filter(x=>x!==d.id);saveRoutine(r);return}
+      if(k==="height")d.height=parseHt(inp.value)||d.height||0,inp.value=fmtHt(d.height);else d[k]=inp.value;delete d.sample;saveTeam()}));
+    $("[data-del]",tr).onclick=()=>confirmBox(`Remove ${d.name}?`,"They'll be taken off the roster and out of every routine.","Remove",()=>{team.roster=team.roster.filter(x=>x.id!==d.id);Object.values(routines).forEach(rr=>{if(rr.cast.includes(d.id)){rr.cast=rr.cast.filter(x=>x!==d.id);saveRoutine(rr)}});saveTeam();render()})});
+  const nm=$("#dName",m);nm.addEventListener("paste",e=>{const t=(e.clipboardData||{}).getData?.("text")||"";if(t.includes("\n")){e.preventDefault();t.split(/\n/).map(s=>s.trim()).filter(Boolean).forEach(addDancer);saveTeam();render();toast("Dancers added")}});
+  $("#addD",m).addEventListener("submit",e=>{e.preventDefault();addDancer(nm.value.trim(),parseHt($("#dHt",m).value));saveTeam();render();$("#dName").focus()})}
+function addDancer(name,height){if(!name)return;const d={id:uid(),name,height:height||0,color:PALETTE[team.roster.length%PALETTE.length],role:"Dancer",skill:"Intermediate"};team.roster.push(d);
+  const r=R();if(r&&!r.cast.includes(d.id)){r.cast.push(d.id);r.formations.forEach(f=>f.pos[d.id]=defaultSpot(r,d.id));saveRoutine(r)}}
+
+/* ---------------- REHEARSALS TAB ---------------- */
+function renderSessions(m){const today=new Date().toISOString().slice(0,10);const ss=team.sessions.slice().sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  const up=ss.filter(s=>s.date>=today),past=ss.filter(s=>s.date<today).reverse();
+  const row=s=>{const d=new Date(s.date+"T12:00:00");const rt=routines[s.routine];return `<div class="sess ${s.date<today?"past":""}" data-id="${s.id}"><div class="date"><small>${d.toLocaleDateString(undefined,{month:"short"})}</small><b>${d.getDate()}</b><small>${d.toLocaleDateString(undefined,{weekday:"short"})}</small></div>
+    <div style="min-width:0"><b>${esc(s.focus||"Practice")}</b><div class="hint">${esc(s.start||"")}${s.end?"–"+esc(s.end):""}${s.place?" · "+esc(s.place):""}${rt?" · "+esc(rt.title):""}</div></div>
+    <button class="btn sm ghost danger w" data-del>Remove</button></div>`};
+  m.innerHTML=`<div class="pagehead"><div><h1>Rehearsals</h1><p>Practice schedule for the whole team. Add what you're working on so dancers know which routine to review before they show up.</p></div></div>
+  <div class="grid2"><div style="min-width:0">
+    <div class="lbl" style="margin-bottom:8px">Coming up</div>
+    <div class="list">${up.length?up.map(row).join(""):`<div class="empty">No rehearsals scheduled.</div>`}</div>
+    ${past.length?`<div class="lbl" style="margin:18px 0 8px">Past</div><div class="list">${past.slice(0,10).map(row).join("")}</div>`:""}
+  </div>
+  <form class="panel w" id="addS"><span class="lbl">Schedule a rehearsal</span>
+    <label class="f">Date<input type="date" id="sDate" required value="${today}"></label>
+    <div class="row2"><label class="f">Start<input type="time" id="sStart" value="19:00"></label><label class="f">End<input type="time" id="sEnd" value="21:00"></label></div>
+    <label class="f">Where<input type="text" id="sPlace" placeholder="e.g. RAC dance studio"></label>
+    <label class="f">Focus<input type="text" id="sFocus" placeholder="e.g. Clean chorus transitions"></label>
+    <label class="f">Routine<select id="sRout"><option value="">Any</option>${sortedRoutines().map(r=>`<option value="${r.id}">${esc(r.title)}</option>`).join("")}</select></label>
+    <button class="btn pri">Add rehearsal</button></form></div>`;
+  $$(".sess [data-del]",m).forEach(b=>b.onclick=()=>{const id=b.closest(".sess").dataset.id;team.sessions=team.sessions.filter(s=>s.id!==id);saveTeam();render()});
+  const f=$("#addS",m);if(f)f.addEventListener("submit",e=>{e.preventDefault();team.sessions.push({id:uid(),date:$("#sDate").value,start:$("#sStart").value,end:$("#sEnd").value,place:$("#sPlace").value.trim(),focus:$("#sFocus").value.trim(),routine:$("#sRout").value});saveTeam();render();toast("Rehearsal added")})}
+
+/* ---------------- WARDROBE TAB ---------------- */
+let wFilter="all";
+function renderWardrobe(m){const items=team.items;const cnt=k=>items.filter(i=>i.status===k).length;const shown=items.filter(i=>wFilter==="all"||i.status===wFilter);
+  m.innerHTML=`<div class="pagehead"><div><h1>Costumes &amp; props</h1><p>Track every lehenga, kurta, dupatta and prop, who it belongs to, and whether it's ready for the show.</p></div></div>
+  <div class="statrow">${[["all","All",items.length],...STATUSES.map(([k,n])=>[k,n,cnt(k)])].map(([k,n,c])=>`<button class="stat" data-f="${k}" style="cursor:pointer;text-align:left;${wFilter===k?"border-color:var(--accent)":""}"><b>${c}</b>${n}</button>`).join("")}</div>
+  <div class="tablewrap"><table><thead><tr><th>Item</th><th>Type</th><th>For</th><th>Status</th><th>Note</th><th class="w"></th></tr></thead><tbody>
+  ${shown.length?shown.map(i=>`<tr data-id="${i.id}"><td><input type="text" value="${esc(i.name)}" data-k="name" aria-label="Item"></td>
+    <td><select data-k="kind" aria-label="Type">${["Costume","Prop","Accessory"].map(x=>`<option ${x===i.kind?"selected":""}>${x}</option>`).join("")}</select></td>
+    <td><select data-k="who" aria-label="For"><option value="">Whole team</option>${team.roster.map(d=>`<option value="${d.id}" ${d.id===i.who?"selected":""}>${esc(d.name)}</option>`).join("")}</select></td>
+    <td><select data-k="status" aria-label="Status">${STATUSES.map(([k,n])=>`<option value="${k}" ${k===i.status?"selected":""}>${n}</option>`).join("")}</select> <span class="status st-${i.status}">${STATUSES.find(s=>s[0]===i.status)[1]}</span></td>
+    <td><input type="text" value="${esc(i.note||"")}" data-k="note" placeholder="Size, store, price…" aria-label="Note"></td>
+    <td class="w"><button class="btn sm ghost danger" data-del>Remove</button></td></tr>`).join(""):`<tr><td colspan="6" class="empty">${items.length?"Nothing with this status.":"No costumes or props yet."}</td></tr>`}</tbody></table></div>
+  <form class="row w" id="addI" style="margin-top:12px"><input type="text" id="iN" placeholder="e.g. Red lehenga, dandiya sticks" required style="flex:1;min-width:180px">
+    <select id="iK"><option>Costume</option><option>Prop</option><option>Accessory</option></select>
+    <select id="iW2"><option value="">Whole team</option>${team.roster.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select>
+    <button class="btn pri">Add item</button></form>`;
+  if(!canWrite)$$("input,select",m).forEach(i=>i.disabled=true);
+  $$("[data-f]",m).forEach(b=>b.onclick=()=>{wFilter=b.dataset.f;render()});
+  $$("tbody tr[data-id]",m).forEach(tr=>{const it=team.items.find(x=>x.id===tr.dataset.id);$$("[data-k]",tr).forEach(inp=>inp.addEventListener("change",()=>{it[inp.dataset.k]=inp.value;saveTeam();if(inp.dataset.k==="status")render()}));
+    $("[data-del]",tr).onclick=()=>{team.items=team.items.filter(x=>x.id!==it.id);saveTeam();render()}});
+  const f=$("#addI",m);if(f)f.addEventListener("submit",e=>{e.preventDefault();team.items.push({id:uid(),name:$("#iN").value.trim(),kind:$("#iK").value,who:$("#iW2").value,status:"needed",note:""});saveTeam();render()})}
+
+
+
+/* ---------------- video → stage motion ---------------- */
+let mpP=null,mpTs=0;
+const MP_VER="0.10.21",MP_CDN=`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/`,MP_MODEL_CDN="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task";
+async function urlOk(u){try{const r=await fetch(u,{method:"HEAD",cache:"no-store"});return r.ok}catch(e){return false}}
+function loadPose(){return mpP||(mpP=(async()=>{const local=new URL("mp/",location.href).href;
+  const base=(await urlOk(local+"vision_bundle.mjs"))&&(await urlOk(local+"wasm/vision_wasm_internal.wasm"))?local:MP_CDN;
+  const mod=await import(base+"vision_bundle.mjs");const fs=await mod.FilesetResolver.forVisionTasks(base+"wasm");
+  const model=(await urlOk(local+"pose.task"))?local+"pose.task":MP_MODEL_CDN;
+  const opt=d=>({baseOptions:{modelAssetPath:model,delegate:d},runningMode:"VIDEO",numPoses:1,minPoseDetectionConfidence:.4,minTrackingConfidence:.4});
+  try{return await mod.PoseLandmarker.createFromOptions(fs,opt("GPU"))}catch(e){return await mod.PoseLandmarker.createFromOptions(fs,opt("CPU"))}})().catch(e=>{mpP=null;throw e}))}
+function seekTo(v,t){return new Promise(res=>{let done=false;const fin=()=>{if(done)return;done=true;v.removeEventListener("seeked",fin);res()};v.addEventListener("seeked",fin);setTimeout(fin,2500);v.currentTime=t})}
+function smoothSeries(arr,ker){const n=arr.length,h=(ker.length-1)/2;return arr.map((_,i)=>{let sw=0,acc=0;for(let k=-h;k<=h;k++){const j=i+k;if(j<0||j>=n)continue;const w=ker[k+h];sw+=w;acc+=arr[j]*w}return acc/sw})}
+function buildClip(raw,fps,mirror){const n=raw.length;if(n<2)return null;
+  const S=MP_J.map(()=>new Array(n).fill(null));let any=false;
+  for(let i=0;i<n;i++){const fr=raw[i];if(!fr)continue;MP_J.forEach((jj,k)=>{const q=fr[jj];if(q&&q[3]>0.3){S[k][i]=[mirror?-q[0]:q[0],-q[1],q[2]];any=true}})}
+  if(!any)return null;
+  S.forEach(ser=>{let last=-1;for(let i=0;i<n;i++){if(!ser[i])continue;for(let g=last+1;g<i;g++){const a=last>=0?ser[last]:ser[i],u=last>=0?(g-last)/(i-last):1;ser[g]=a.map((v,ax)=>v+(ser[i][ax]-v)*u)}last=i}
+    if(last<0){for(let i=0;i<n;i++)ser[i]=[0,0,0]}else for(let g=last+1;g<n;g++)ser[g]=ser[last].slice()});
+  const K=[1,2,3,2,1];const C=S.map(ser=>[0,1,2].map(ax=>smoothSeries(ser.map(v=>v[ax]),K)));
+  let low=[];for(let i=0;i<n;i++)low.push(Math.min(C[11][1][i],C[12][1][i],C[13][1][i],C[14][1][i]));low=smoothSeries(low,[1,1,1,1,1,1,1]);
+  C.forEach(c=>{c[1]=c[1].map((v,i)=>v-low[i])});
+  const nose=C[0][1].slice().sort((a,b)=>a-b);let ref=nose[Math.floor(n/2)];if(!(ref>0.6&&ref<2.4))ref=1.5;
+  const data=new Array(n*45);for(let i=0;i<n;i++)for(let k=0;k<15;k++)for(let ax=0;ax<3;ax++)data[(i*15+k)*3+ax]=Math.round(C[k][ax][i]*1000);
+  return{fps,n,ref:+ref.toFixed(3),dur:+((n-1)/fps).toFixed(2),data}}
+function saveMotion(cl){motions[cl.id]=cl;persistLocal();if(backend==="cloud"&&canWrite){setStatus("busy","Saving…");db.doc("motions/"+cl.id).set(clone(cl)).then(()=>setStatus("ok","Synced with team")).catch(e=>{setStatus("warn","Motion not synced");toast(e&&e.code==="invalid_argument"?"This clip is too long to sync. Trim it shorter.":"Couldn't sync the motion. Try again.")})}}
+function deleteMotion(id){delete motions[id];Object.values(routines).forEach(r=>{let ch=false;r.formations.forEach(f=>{if(f.motion)for(const k in f.motion)if(f.motion[k]===id){delete f.motion[k];ch=true}});if(ch)saveRoutine(r)});persistLocal();if(backend==="cloud"&&canWrite)db.doc("motions/"+id).delete().catch(()=>{})}
+function previewLoop(cv,clip,stopRef){const c=cv.getContext("2d");const t0=performance.now();const css=getComputedStyle(document.documentElement);
+  const tick=()=>{if(stopRef.stop||!cv.isConnected)return;const b=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||1;const w=Math.max(120,b.width),h=Math.max(150,b.height);
+    if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle=css.getPropertyValue("--stage").trim();c.fillRect(0,0,w,h);
+    const pr=makeProj(w,h*1.25,7,6);c.strokeStyle="rgba(255,255,255,.08)";c.lineWidth=1;for(let x=-3;x<=3;x++){const a=pr(x,0,0),bb=pr(x,6,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(bb[0],bb[1]);c.stroke()}for(let y=0;y<=6;y++){const a=pr(-3.5,y,0),bb=pr(3.5,y,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(bb[0],bb[1]);c.stroke()}
+    const t=((performance.now()-t0)/1000)%Math.max(clip.dur,.1);drawFigure(c,pr,{x:0,y:2.4},clipFrame(clip,t),(5.5*0.93)/clip.ref,css.getPropertyValue("--stage-mark").trim());
+    c.fillStyle="rgba(233,226,246,.6)";c.font="600 11px Manrope, system-ui, sans-serif";c.textAlign="left";c.fillText(`${t.toFixed(1)}s / ${clip.dur.toFixed(1)}s`,10,h-10);requestAnimationFrame(tick)};tick()}
+function openMotionStudio(){const r=R();if(!r)return;const f=r.formations[ui.f];const cast=castOf(r);const pre=new Set(ui.sel.size?[...ui.sel]:[]);
+  const m=document.createElement("div");m.className="modal";
+  m.innerHTML=`<div class="box studio-box" role="dialog" aria-modal="true" aria-labelledby="msT">
+   <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2 class="ms-title" id="msT">Turn video into stage motion</h2><button class="btn ghost" data-x aria-label="Close">✕</button></div>
+   <div class="ms-grid">
+    <section class="ms-step"><div class="ms-h"><span class="ms-n">1</span><div><b>Upload a video</b><small>One dancer, full body in frame, filmed from the front.</small></div></div>
+      <div class="ms-pane" id="msVid"><button class="btn pri" id="msPick">Choose a video</button><span class="hint">The video stays on this device. Only the motion is saved.</span></div>
+      <div class="ms-trim" id="msTrim" hidden><span>Start</span><input type="range" id="msA" min="0" step="0.1" value="0" aria-label="Clip start"><span class="mono" id="msAv">0.0s</span>
+        <span>End</span><input type="range" id="msB" min="0" step="0.1" value="0" aria-label="Clip end"><span class="mono" id="msBv">0.0s</span></div>
+      <label class="row hint" id="msMirL" hidden><input type="checkbox" id="msMir"> Filmed with the selfie camera (mirrored)</label>
+      <input type="file" id="msFile" accept="video/*" hidden></section>
+    <section class="ms-step"><div class="ms-h"><span class="ms-n">2</span><div><b>Build 3D motion</b><small>8Count tracks 15 joints on every frame, right on this device.</small></div></div>
+      <div class="ms-pane dark"><canvas id="msCv" aria-label="Motion preview"></canvas></div>
+      <div class="ms-prog"><div id="msBar"></div></div>
+      <div class="row"><button class="btn pri" id="msBuild" disabled>Build 3D motion</button><span class="hint" id="msStat">Choose a video first.</span></div></section>
+    <section class="ms-step"><div class="ms-h"><span class="ms-n">3</span><div><b>See it on stage</b><small>Name it and choose who dances it in “${esc(f.name)}”.</small></div></div>
+      <label class="f">Motion name<input type="text" id="msName" placeholder="e.g. Hook step" value=""></label>
+      <div class="ms-who">${cast.map(d=>`<label><input type="checkbox" value="${d.id}" ${pre.has(d.id)||!pre.size?"checked":""}><span class="sw" style="background:${d.color}"></span>${esc(d.name)}</label>`).join("")||`<span class="hint">Add dancers to this routine first.</span>`}</div>
+      <span class="hint">Starts on count 1 of this formation and plays at real speed.</span>
+      <button class="btn pri" id="msSave" disabled>Save and place on stage</button></section>
+   </div></div>`;
+  document.body.appendChild(m);let url=null,clip=null,busy=false;const stopRef={stop:false};
+  const close=()=>{if(busy){stopRef.cancel=true}stopRef.stop=true;if(url)URL.revokeObjectURL(url);m.remove()};
+  m.addEventListener("click",e=>{if(e.target===m||e.target.closest("[data-x]"))close()});
+  const vidPane=$("#msVid",m),fileIn=$("#msFile",m),A=$("#msA",m),B=$("#msB",m),stat=$("#msStat",m),bar=$("#msBar",m),bBuild=$("#msBuild",m),bSave=$("#msSave",m);
+  $("#msPick",m).onclick=()=>fileIn.click();
+  const syncTrim=src=>{let a=+A.value,b=+B.value;if(b-a>30){if(src===A)b=a+30;else a=b-30}if(b<a+0.5){if(src===A)a=Math.max(0,b-0.5);else b=a+0.5}A.value=a;B.value=b;$("#msAv",m).textContent=a.toFixed(1)+"s";$("#msBv",m).textContent=b.toFixed(1)+"s";const v=$("video",m);if(v&&!busy)v.currentTime=src===B?b:a};
+  A.oninput=()=>syncTrim(A);B.oninput=()=>syncTrim(B);
+  fileIn.onchange=()=>{const file=fileIn.files[0];if(!file)return;if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);clip=null;bSave.disabled=true;bar.style.width="0";
+    vidPane.innerHTML=`<video src="${url}" playsinline muted controls preload="auto"></video><button class="btn sm" id="msRe">Choose another</button>`;$("#msRe",m).onclick=()=>fileIn.click();
+    const v=$("video",m);v.onloadedmetadata=()=>{const d=v.duration||0;A.max=B.max=d.toFixed(1);A.value=0;B.value=Math.min(d,30).toFixed(1);$("#msTrim",m).hidden=false;$("#msMirL",m).hidden=false;syncTrim();bBuild.disabled=false;
+      stat.textContent=d>30?"Clips are capped at 30 seconds. Drag Start and End to pick the part you want.":"Ready. Trim if you like, then build.";if(!$("#msName",m).value)$("#msName",m).value=file.name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").slice(0,30)};
+    v.onerror=()=>{stat.textContent="This video format can't be played here. Try an MP4 or MOV.";bBuild.disabled=true}};
+  bBuild.onclick=async()=>{const v=$("video",m);if(!v||busy)return;busy=true;bBuild.disabled=true;bSave.disabled=true;stat.textContent="Loading the pose model…";
+    try{const pl=await loadPose();const a=+A.value,b=+B.value,fps=15;const total=Math.max(2,Math.round((b-a)*fps)+1);const raw=[];v.pause();let found=0;
+      for(let k=0;k<total;k++){if(stopRef.cancel)return;const t=Math.min(b,a+k/fps);await seekTo(v,t);mpTs+=Math.round(1000/fps);const res=pl.detectForVideo(v,mpTs);const wl=res&&res.worldLandmarks&&res.worldLandmarks[0];
+        raw.push(wl?wl.map(q=>[q.x,q.y,q.z,q.visibility==null?1:q.visibility]):null);if(wl)found++;bar.style.width=Math.round((k+1)/total*100)+"%";if(k%5===0)stat.textContent=`Tracking frame ${k+1} of ${total}…`;if(k%10===0)await new Promise(r=>setTimeout(r,0))}
+      if(found<total*0.4){stat.textContent=`Only found the dancer in ${found} of ${total} frames. Try a clip with the full body in view and better light.`;return}
+      clip=buildClip(raw,fps,$("#msMir",m).checked);if(!clip){stat.textContent="Couldn't build a motion from this clip.";return}
+      stat.textContent=`Tracked the dancer in ${found} of ${total} frames. Check the preview, then save.`;bSave.disabled=!cast.length;previewLoop($("#msCv",m),clip,stopRef)}
+    catch(e){stat.textContent="The pose model couldn't load on this device. Try Chrome or Safari on a laptop.";console.error(e)}
+    finally{busy=false;bBuild.disabled=false}};
+  $("#msMir",m).onchange=()=>{if(clip){for(let i=0;i<clip.data.length;i+=3)clip.data[i]=-clip.data[i]}};
+  bSave.onclick=()=>{if(!clip)return;const who=$$(".ms-who input:checked",m).map(i=>i.value);if(!who.length){stat.textContent="Tick at least one dancer in step 3.";return}
+    const cl={id:uid(),name:($("#msName",m).value.trim()||"Motion").slice(0,40),created:Date.now(),...clip};saveMotion(cl);
+    pushUndo();const rr=R(),ff=rr.formations[ui.f];ff.motion=ff.motion||{};who.forEach(id=>ff.motion[id]=cl.id);saveRoutine(rr);
+    stopRef.stop=true;if(url)URL.revokeObjectURL(url);m.remove();ui.view="3d";render();toast(`“${cl.name}” placed on ${who.length} dancer${who.length>1?"s":""}. Press play to watch.`)}}
+
+/* ---------------- iPhone prototype ---------------- */
+const PICON={spot:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
+  cues:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>',
+  schedule:'<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  me:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.3-3.8 4.2-5.5 7.5-5.5s6.2 1.7 7.5 5.5"/></svg>'};
+let lastCue="";
+function renderPhone(){const m=$("#main");const list=sortedRoutines();if(!routines[ui.rid]&&list.length)ui.rid=list[0].id;const r=R();
+  ui.mode="spot";document.body.classList.add("spot");lastCue="";
+  let body;if(!r)body=`<div class="p-empty"><b>No routines yet</b><p>Your captain hasn't posted a routine. Check back after practice.</p>${canWrite?`<button class="btn pri" id="pStart">Create a routine in the editor</button>`:""}</div>`;
+  else if(ui.ptab==="spot")body=phoneSpot(r);else if(ui.ptab==="cues")body=phoneCues(r);else if(ui.ptab==="schedule")body=phoneSchedule();else body=phoneMe(r);
+  m.innerHTML=`<div class="p-wrap"><div class="p-dev"><div class="p-screen"><div class="p-island" aria-hidden="true"></div>
+    <div class="p-top"><span class="brand"><b>8</b>Count</span><span class="p-sub">${esc(r?r.title:team.name)}</span></div>
+    <div class="p-body">${body}</div>
+    <nav class="p-tabs" role="tablist">${[["spot","My spot"],["cues","Cues"],["schedule","Rehearsals"],["me","Me"]].map(([k,n])=>`<button role="tab" data-pt="${k}" aria-selected="${ui.ptab===k}">${PICON[k]}<span>${n}</span></button>`).join("")}</nav>
+  </div></div><p class="p-note">iPhone prototype · <button class="linkbtn" id="pExit">Open the full editor</button></p></div>`;
+  $$("[data-pt]",m).forEach(b=>b.onclick=()=>{if(b.dataset.pt!=="spot")stop();ui.ptab=b.dataset.pt;render()});
+  $("#pExit",m).onclick=()=>{stop();location.hash="editor"};
+  const pi=$("#pImport",m);if(pi)pi.onclick=pickImport;
+  const ps=$("#pStart",m);if(ps)ps.onclick=()=>{location.hash="editor"};
+  const who=$("#pWho",m);if(who)who.onchange=e=>{ui.spot=e.target.value||null;ls.set("8c.spot",ui.spot);render()};
+  const rs=$("#pRout",m);if(rs)rs.onchange=e=>{stop();ui.rid=e.target.value;ls.set("8c.rid",ui.rid);ui.f=0;ui.beat=0;render()};
+  $$("[data-song]",m).forEach(b=>b.onclick=()=>$("#songFile").click());
+  $$(".cue",m).forEach(c=>c.onclick=()=>{stop();seekFormation(+c.dataset.i);ui.ptab="spot";render()});
+  if(r&&ui.ptab==="spot"){loadSongFor(r);$("#pPrev").onclick=()=>step(-1);$("#pNext").onclick=()=>step(1);$("#pPlay").onclick=toggle;buildStage();drawFrame();phoneControls()}}
+function whoPicker(r,label){return `<select id="pWho" aria-label="Who are you?"><option value="">${label}</option>${castOf(r).map(d=>`<option value="${d.id}" ${d.id===ui.spot?"selected":""}>${esc(d.name)}</option>`).join("")}</select>`}
+function phoneSpot(r){const me=castOf(r).find(d=>d.id===ui.spot);
+  return `${me?"":`<div class="p-card"><b>Who are you?</b><span class="hint">Pick your name and your spot lights up on every count.</span>${whoPicker(r,"Choose your name")}</div>`}
+  <div class="p-stage"><div><div class="fname" id="fName"></div><div class="fcount" id="fCount"></div></div>
+    <svg id="stageSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="p-ctl"><div class="counter"><span class="big" id="cEight">1·1</span><div class="dots" id="cDots">${"<span></span>".repeat(8)}</div><span class="sm" id="cTime"></span></div>
+    <div class="p-btns"><button id="pPrev" aria-label="Previous formation">◀︎</button><button class="pri" id="pPlay" aria-label="Play">▶︎</button><button id="pNext" aria-label="Next formation">▶︎</button></div></div></div>
+  <div class="p-card" id="pCue"></div>
+  ${r.songName&&!hasSong()?`<button class="btn" data-song>Load your copy of “${esc(r.songName)}”</button>`:""}`}
+function phoneControls(){const b=$("#pPlay");if(!b)return;b.textContent=ui.playing?"❚❚":"▶︎";b.setAttribute("aria-label",ui.playing?"Pause":"Play")}
+function updatePhoneCue(r,beat,L){const el=$("#pCue");if(!el)return;const me=castOf(r).find(d=>d.id===ui.spot);const key=[L.i,L.moving,ui.spot,r.updatedAt].join("|");if(key===lastCue)return;lastCue=key;
+  const f=r.formations[L.i],nx=r.formations[L.i+1];const s=starts(r);
+  if(!me){el.innerHTML=`<span class="lbl">Notes</span><b>${esc(f.name)}</b><span class="hint">${esc(f.notes||"No notes for this formation.")}</span>`;return}
+  if(L.moving){const p=posIn(r,nx,me.id);el.innerHTML=`<span class="lbl">Moving · ${f.trans} counts</span><b>Head to ${esc(describePos(r,p))}</b><span class="hint">Next formation: ${esc(nx.name)}</span>`;return}
+  const p=posIn(r,f,me.id);const left=nx?s[L.i]+f.hold-Math.floor(beat):0;
+  el.innerHTML=`<span class="lbl">Your spot now</span><b>${esc(describePos(r,p))}</b>${f.moves[me.id]?`<span>Move: <b style="font-size:13px">${esc(f.moves[me.id])}</b></span>`:""}${f.notes?`<span class="hint">${esc(f.notes)}</span>`:""}${nx?`<span class="hint">Then ${esc(nx.name)} in ${Math.max(0,left)} counts</span>`:`<span class="hint">Final formation</span>`}`}
+function phoneCues(r){const me=castOf(r).find(d=>d.id===ui.spot);const s=starts(r);
+  if(!me)return `<div class="p-card"><b>Pick your name for your cue sheet</b>${whoPicker(r,"Choose your name")}</div>`;
+  return `<span class="lbl">${esc(me.name)} · ${r.formations.length} formations</span>`+r.formations.map((f,i)=>{const e=eightLabel(s[i]);return `<div class="cue" data-i="${i}"><span class="n">${e.eight}·${e.count}</span><b>${esc(f.name)}</b><span class="p">${esc(describePos(r,posIn(r,f,me.id)))}</span><span class="m">${f.moves[me.id]?esc(f.moves[me.id])+" · ":""}${f.hold} counts${f.notes?" · "+esc(f.notes):""}</span></div>`}).join("")}
+function phoneSchedule(){const today=new Date().toISOString().slice(0,10);const up=team.sessions.filter(x=>x.date>=today).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  if(!up.length)return `<div class="p-empty"><b>No rehearsals scheduled</b><p>New practices show up here as soon as your captain adds them.</p></div>`;
+  return `<div class="list">${up.map(x=>{const d=new Date(x.date+"T12:00:00");const rt=routines[x.routine];return `<div class="sess"><div class="date"><small>${d.toLocaleDateString(undefined,{month:"short"})}</small><b>${d.getDate()}</b><small>${d.toLocaleDateString(undefined,{weekday:"short"})}</small></div><div style="min-width:0"><b>${esc(x.focus||"Practice")}</b><div class="hint">${esc(x.start||"")}${x.end?"–"+esc(x.end):""}${x.place?" · "+esc(x.place):""}${rt?" · "+esc(rt.title):""}</div></div></div>`}).join("")}</div>`}
+function phoneMe(r){const mine=team.items.filter(i=>i.who===ui.spot);
+  return `<div class="p-card"><span class="lbl">I am</span>${r?whoPicker(r,"Choose your name"):""}</div>
+  <div class="p-card"><span class="lbl">Routine</span><select id="pRout" aria-label="Routine">${sortedRoutines().map(x=>`<option value="${x.id}" ${x.id===ui.rid?"selected":""}>${esc(x.title)}</option>`).join("")}</select>
+    ${r?`<span class="hint">${r.formations.length} formations · ${r.bpm} BPM${r.songName?" · ♪ "+esc(r.songName):""}</span>${r.songName?`<button class="btn sm" data-song style="align-self:start">${hasSong()?"Change song file":"Load song file"}</button>`:""}`:""}</div>
+  ${ui.spot?`<div class="p-card"><span class="lbl">My costumes & props</span>${mine.length?mine.map(i=>`<div class="row" style="justify-content:space-between"><span>${esc(i.name)}</span><span class="status st-${i.status}">${STATUSES.find(x=>x[0]===i.status)[1]}</span></div>`).join(""):`<span class="hint">Nothing assigned to you yet.</span>`}</div>`:""}
+  <div class="p-card"><span class="lbl">Got a routine file?</span><button class="btn sm" id="pImport" style="align-self:start">Open a routine file</button></div>
+  <div class="p-card"><span class="lbl">Team</span><b>${esc(team.name||"Your team")}</b><span class="hint">${team.roster.length} dancers</span></div>`}
+function routeFromHash(){const h=location.hash.slice(1);ui.phone=h==="phone"||(h!=="editor"&&window.innerWidth<600)}
+window.addEventListener("hashchange",()=>{if(location.hash.startsWith("#r=")){importFromHash();return}stop();routeFromHash();if(!ui.phone){ui.mode=canWrite?"edit":"spot"}render();window.scrollTo(0,0)});
+routeFromHash();
+
+
+/* ---------------- sharing: links, files, published team file ---------------- */
+const REPO="samarth2006manjunath-rgb/8count";
+const b64u={enc:u8=>{let s="";for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")},
+  dec:str=>{str=str.replace(/-/g,"+").replace(/_/g,"/");while(str.length%4)str+="=";const b=atob(str);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}};
+async function pack(obj){const data=new TextEncoder().encode(JSON.stringify(obj));if(!window.CompressionStream)return "j"+b64u.enc(data);
+  const cs=new Blob([data]).stream().pipeThrough(new CompressionStream("deflate-raw"));return "z"+b64u.enc(new Uint8Array(await new Response(cs).arrayBuffer()))}
+async function unpack(str){const kind=str[0],u=b64u.dec(str.slice(1));let txt;
+  if(kind==="z"){const ds=new Blob([u]).stream().pipeThrough(new DecompressionStream("deflate-raw"));txt=await new Response(ds).text()}else txt=new TextDecoder().decode(u);return JSON.parse(txt)}
+function bundleRoutine(r){const ids=new Set(r.cast),mids=new Set();r.formations.forEach(f=>{if(f.motion)Object.values(f.motion).forEach(id=>mids.add(id))});
+  return{app:"8count",kind:"routine",v:1,exportedAt:Date.now(),teamName:team.name,routine:clone(r),dancers:team.roster.filter(d=>ids.has(d.id)).map(clone),motions:[...mids].map(id=>motions[id]).filter(Boolean).map(clone)}}
+function bundleTeam(){return{app:"8count",kind:"team",v:1,exportedAt:Date.now(),team:clone(team),routines:clone(routines),motions:clone(motions)}}
+function importBundle(b){if(!b||b.app!=="8count"||!b.kind)throw new Error("not an 8Count file");
+  const take=(r)=>{const cur=routines[r.id];if(!cur||(r.updatedAt||0)>=(cur.updatedAt||0))routines[r.id]=r};
+  if(b.kind==="routine"){(b.dancers||[]).forEach(d=>{const i=team.roster.findIndex(x=>x.id===d.id);if(i<0)team.roster.push(d);else if(team.roster[i].sample)team.roster[i]=d});
+    (b.motions||[]).forEach(mo=>{if(mo&&mo.id)motions[mo.id]=mo});if(!team.name&&b.teamName)team.name=b.teamName;take(b.routine);persistLocal();return{ids:[b.routine.id],title:b.routine.title}}
+  if(b.kind==="team"){const t=b.team||{};const newer=(t.updatedAt||b.exportedAt||0)>=(team.updatedAt||0);
+    const byId=new Map(team.roster.map(d=>[d.id,d]));(t.roster||[]).forEach(d=>{if(newer||!byId.has(d.id))byId.set(d.id,d)});
+    team={name:newer?(t.name||team.name):team.name,roster:[...byId.values()],sessions:newer?(t.sessions||[]):team.sessions,items:newer?(t.items||[]):team.items,updatedAt:Math.max(team.updatedAt||0,t.updatedAt||0)};
+    Object.values(b.routines||{}).forEach(take);Object.values(b.motions||{}).forEach(mo=>{if(mo&&mo.id)motions[mo.id]=mo});persistLocal();
+    const ids=Object.keys(b.routines||{});return{ids,title:ids.length+" routine"+(ids.length===1?"":"s")}}
+  throw new Error("unknown file")}
+function downloadJSON(obj,name){const blob=new Blob([JSON.stringify(obj)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+const fileSlug=s=>String(s||"routine").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"routine";
+const importIn=document.createElement("input");importIn.type="file";importIn.accept=".json,application/json";importIn.hidden=true;document.body.appendChild(importIn);
+function pickImport(){importIn.value="";importIn.click()}
+importIn.addEventListener("change",async()=>{const file=importIn.files[0];if(!file)return;try{const res=importBundle(JSON.parse(await file.text()));stop();if(res.ids[0]&&routines[res.ids[0]])ui.rid=res.ids[0];ui.f=0;ui.beat=0;if(!ui.phone)ui.tab="stage";render();toast(`Opened ${res.title}`)}
+  catch(e){toast("That file isn't an 8Count routine or team file.")}});
+async function importFromHash(){const h=location.hash.slice(1);if(!h.startsWith("r="))return false;
+  try{const res=importBundle(await unpack(h.slice(2)));ui.rid=res.ids[0];ui.f=0;ui.beat=0;ui.tab="stage";history.replaceState(null,"",location.pathname+location.search);routeFromHash();render();toast(`Loaded “${res.title}”`)}
+  catch(e){history.replaceState(null,"",location.pathname+location.search);toast("This share link is broken or cut off. Ask for a new one, or for the file.")}return true}
+async function shareRoutine(){const r=R();if(!r)return;stop();const bundle=bundleRoutine(r);const code=await pack(bundle);const url=location.origin+location.pathname+"#r="+code;
+  const nClips=bundle.motions.length,tooLong=url.length>60000,long=url.length>6000;
+  const m=document.createElement("div");m.className="modal";
+  m.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-labelledby="shT"><b id="shT" style="font-size:16px">Share “${esc(r.title)}”</b>
+    ${tooLong?`<p class="hint" style="font-size:13px;margin:0">This routine is too big for a link because of its motion clips. Send the file instead: anyone can open it with <b>Open file</b> on the 8Count site.</p>`
+    :`<p class="hint" style="font-size:13px;margin:0">Anyone who opens this link gets the routine, its ${bundle.dancers.length} dancers${nClips?` and ${nClips} motion clip${nClips>1?"s":""}`:""}. It's a snapshot, so send a new link after you make changes.</p>
+      <textarea id="shUrl" rows="3" readonly style="font-family:var(--f-mono);font-size:11px">${esc(url)}</textarea>
+      ${long?`<p class="hint" style="margin:0">This link is long${nClips?" because of the motion clips":""}. If your chat app cuts it off, send the file instead.</p>`:""}`}
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-x>Close</button><button class="btn" id="shFile">Download file</button>${tooLong?"":`${navigator.share?`<button class="btn" id="shNative">Share…</button>`:""}<button class="btn pri" id="shCopy">Copy link</button>`}</div></div>`;
+  document.body.appendChild(m);m.addEventListener("click",e=>{if(e.target===m||e.target.closest("[data-x]"))m.remove()});
+  $("#shFile",m).onclick=()=>{downloadJSON(bundle,fileSlug(r.title)+".8count.json");toast("File saved. Send it to your team.")};
+  const cp=$("#shCopy",m);if(cp)cp.onclick=async()=>{try{await navigator.clipboard.writeText(url);toast("Link copied")}catch(e){const t=$("#shUrl",m);t.focus();t.select();toast("Press Ctrl+C (or ⌘C) to copy")}};
+  const nv=$("#shNative",m);if(nv)nv.onclick=()=>navigator.share({title:r.title+" · 8Count",url}).catch(()=>{});}
+async function loadPublished(){try{const res=await fetch("team.json",{cache:"no-store"});if(!res.ok)return;const b=await res.json();if(!b||b.kind!=="team")return;
+  const seen=ls.get("8c.pub")||0;if((b.exportedAt||0)<=seen)return;const first=!Object.keys(routines).length;importBundle(b);ls.set("8c.pub",b.exportedAt||Date.now());
+  if(!routines[ui.rid])ui.rid=null;stop();render();toast(first?`Loaded ${team.name||"your team"}'s routines`:"Got the latest team routines")}catch(e){}}
+
+/* ---------------- keyboard ---------------- */
+document.addEventListener("keydown",e=>{if(ui.tab!=="stage"||!R())return;const typing=e.target.matches("input,textarea,select");
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!typing&&canWrite){e.preventDefault();undo();return}
+  if(typing)return;
+  if(e.key===" "){e.preventDefault();toggle()}
+  else if(e.key==="["){step(-1)}else if(e.key==="]"){step(1)}
+  else if(e.key.startsWith("Arrow")&&ui.sel.size&&ui.mode==="edit"&&canWrite){e.preventDefault();const r=R();const f=r.formations[ui.f];const d=.5;pushUndo();
+    ui.sel.forEach(id=>{const p={...posIn(r,f,id)};if(e.key==="ArrowLeft")p.x-=d;if(e.key==="ArrowRight")p.x+=d;if(e.key==="ArrowUp")p.y+=d;if(e.key==="ArrowDown")p.y-=d;f.pos[id]={x:+clamp(p.x,-r.W/2+.5,r.W/2-.5).toFixed(2),y:+clamp(p.y,.5,r.D-.5).toFixed(2)}});saveRoutine(r);drawFrame()}
+  else if(e.key==="Escape"){ui.sel.clear();drawFrame();renderInspector()}});
+window.addEventListener("resize",()=>{if(ui.tab==="stage"&&ui.view==="3d")drawFrame()});
+const mq=window.matchMedia?.("(prefers-color-scheme: dark)");mq?.addEventListener?.("change",()=>{if(ui.view==="3d")drawFrame()});
+
+/* ---------------- boot ---------------- */
+render();
+importFromHash().then(()=>loadPublished());
+(async()=>{
+  const c=window.claude;
+  if(!c||typeof c.use!=="function"){backend="local";setStatus("ok","Saved in this browser");render();return}
+  const [dbNs,userNs,smp]=await Promise.all([c.use("db").catch(()=>null),c.use("user").catch(()=>null),c.use("sample").catch(()=>null)]);
+  sampler=smp||null;
+  if(userNs){try{const w=await userNs.can("data.write");if(w===false){canWrite=false;applyRO()}}catch(e){}}
+  if(!dbNs){backend="local";setStatus("ok","Saved in this browser");render();return}
+  db=dbNs;backend="cloud";setStatus("busy","Connecting…");
+  let teamOk=false,rOk=false;const loadTimer=setTimeout(()=>{if(!teamOk||!rOk)setStatus("warn","Offline – showing last saved")},10000);
+  const done=()=>{if(teamOk&&rOk){clearTimeout(loadTimer);setStatus("ok",canWrite?"Synced with team":"View only")}};
+  const rerender=()=>{if(drag||ui.playing)return;const a=document.activeElement;if(a&&a.matches("input,textarea")&&$("#main").contains(a)&&ui.tab!=="stage")return;
+    if(ui.phone){render();return}
+    if(ui.tab==="stage"&&$("#stageSvg")&&R()){buildStage();renderTimeline();renderTransport();renderInspector();drawFrame();$("#teamLabel").textContent=team.name||""}else render()};
+  db.doc("team/main").onSnapshot(s=>{if(!s.metadata.fromCache){teamOk=true;done()}if(dirty.team)return;
+      if(s.exists){team=Object.assign({name:"",roster:[],sessions:[],items:[]},clone(s.data()))}
+      else if(!s.metadata.fromCache&&cache&&cache.team&&canWrite&&(cache.team.roster.length||cache.team.name)){saveTeam()} // first sync: upload local team
+      persistLocal();rerender()},
+    e=>{clearTimeout(loadTimer);setStatus("warn","Not synced");});
+  db.collection("motions").onSnapshot(q=>{if(q.metadata.fromCache&&!q.size)return;const next={};q.docs.forEach(d=>next[d.id]=clone(d.data()));
+      if(!q.metadata.fromCache&&q.empty&&Object.keys(motions).length&&canWrite){Object.values(motions).forEach(saveMotion);return}
+      motions=next;persistLocal();rerender()},e=>{});
+  db.collection("routines").onSnapshot(q=>{if(!q.metadata.fromCache){rOk=true;done()}
+      const next={};q.docs.forEach(d=>{const id=d.id;if(dirty["r:"+id]){if(routines[id])next[id]=routines[id];return}next[id]=clone(d.data())});
+      Object.keys(routines).forEach(id=>{if(dirty["r:"+id]&&routines[id])next[id]=routines[id]});
+      if(!q.metadata.fromCache&&q.empty&&Object.keys(routines).length&&canWrite){Object.values(routines).forEach(r=>queue("r:"+r.id));return}
+      routines=next;persistLocal();if(ui.rid&&!routines[ui.rid])ui.rid=null;rerender()},
+    e=>{clearTimeout(loadTimer);setStatus("warn","Not synced")});
+})();
+})();
+</script>
+
+</body>
+</html>

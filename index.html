@@ -131,6 +131,61 @@ main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px
 .dots span{width:9px;height:9px;border-radius:50%;background:var(--stage-line-2)}
 .dots span.on{background:var(--stage-mark)}
 
+/* print */
+#printArea{display:none}
+@media print{
+  body>*:not(#printArea){display:none!important}
+  body{background:#fff!important;color:#000}
+  #printArea{display:block;font-family:var(--f-body);color:#111}
+  .pp{page-break-after:always;padding:0}
+  .pp h1{font-family:var(--f-display);font-weight:400;font-size:26px;margin:0 0 4px}
+  .pd{margin:0 0 10px;color:#555;font-size:12px}
+  .pk{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;margin:0 0 10px}
+  .pg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pg.sm{grid-template-columns:repeat(4,1fr);margin-top:12px}
+  .pg figure{margin:0;break-inside:avoid}
+  .pg figcaption{font-size:10.5px;margin-top:3px}
+  .pm{width:100%;height:auto;display:block}
+  .pmf{fill:#f4f2f8;stroke:#888;stroke-width:.12}.pmw{fill:#fbfbfb;stroke:#bbb;stroke-width:.08;stroke-dasharray:.3 .3}.pmc{stroke:#c9a227;stroke-width:.08;stroke-dasharray:.3 .3}
+  .pmo{fill:#9a92ad}.pmme{fill:#e07a14;stroke:#000;stroke-width:.18}.pmp{fill:#ddd;stroke:#777;stroke-width:.08}
+  .pmt{fill:#fff;font-size:.72px;font-weight:800;text-anchor:middle;dominant-baseline:central;font-family:Manrope,Arial,sans-serif}
+  .pml{fill:#888;font-size:.6px;text-anchor:middle;dominant-baseline:hanging;font-family:Manrope,Arial,sans-serif;letter-spacing:.1px}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}th,td{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:top}th{background:#f1eef6}}
+.cuesec{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-right:4px}
+/* sections, loop, warnings */
+.seclane{position:relative;height:24px;margin-bottom:4px}
+.secband{position:absolute;top:0;bottom:0;border:0;border-radius:6px;background:color-mix(in srgb,var(--c) 22%,var(--surface));color:var(--ink);border-left:3px solid var(--c);font:700 11px var(--f-body);text-align:left;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.secband:hover{background:color-mix(in srgb,var(--c) 34%,var(--surface))}
+.loopband{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--accent) 22%,transparent);border-left:2px solid var(--accent);border-right:2px solid var(--accent);pointer-events:none}
+.wb{color:#c43d4b;font-weight:800;font-family:var(--f-mono)}
+.blk .t.bad{background:repeating-linear-gradient(135deg,color-mix(in srgb,#ef4f5f 40%,transparent) 0 5px,transparent 5px 10px);border-left-color:#ef4f5f}
+.warns{display:flex;flex-direction:column;gap:4px}
+.warn{text-align:left;border:1px solid color-mix(in srgb,#e0a84a 55%,transparent);background:color-mix(in srgb,#e0a84a 12%,var(--surface));border-radius:8px;padding:6px 9px;font-size:12px;color:var(--ink)}
+.warn.x{border-color:color-mix(in srgb,#ef4f5f 55%,transparent);background:color-mix(in srgb,#ef4f5f 10%,var(--surface))}
+.okline{font-size:12px;color:var(--good);font-weight:600}
+.secrow{display:flex;align-items:center;gap:6px}
+.secrow input[type=text]{flex:1;min-width:0}
+.secrow label{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.propic{width:24px;text-align:center;font-size:15px}
+.att{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 12px;padding:8px 2px 2px;border-top:1px dashed var(--line)}
+.att label{display:flex;align-items:center;gap:6px;font-size:13px}
+/* practice bar */
+.practice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 4px 2px;margin-top:8px;border-top:1px solid var(--stage-line-2);color:var(--stage-ink)}
+.pgrp{display:flex;align-items:center;gap:6px}
+.plbl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(233,226,246,.6)}
+.seg.dk{border-color:var(--stage-line-2)}
+.seg.dk button{background:transparent;color:rgba(233,226,246,.75);padding:4px 9px;font-size:12px}
+.seg.dk button+button{border-left-color:var(--stage-line-2)}
+.seg.dk button[aria-pressed="true"]{background:var(--stage-mark);color:#22180a}
+.pt{border:1px solid var(--stage-line-2);background:transparent;color:rgba(233,226,246,.8);border-radius:999px;padding:4px 11px;font-weight:700;font-size:12px}
+.pt[aria-pressed="true"]{background:var(--stage-mark);border-color:var(--stage-mark);color:#22180a}
+.practice input[type=number]{width:52px;background:transparent;color:var(--stage-ink);border-color:var(--stage-line-2);padding:3px 6px}
+.p-prac{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+/* practice video */
+.vidcard{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.vidcard[hidden]{display:none}
+.vidhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vidcard video{width:100%;max-height:52vh;background:#000;border-radius:8px}
 /* timeline */
 .timeline{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px}
 .tlhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
@@ -239,6 +294,22 @@ body.phone main{max-width:none;padding-block:16px}
 .swapbar span{overflow:hidden;text-overflow:ellipsis}
 .swapbar .btn{background:transparent;color:var(--stage-ink);border-color:var(--stage-line-2)}
 .tok:focus,.tok:focus-visible{outline:none}
+.wing{fill:rgba(255,255,255,.035);stroke:var(--stage-line-2);stroke-width:.06;stroke-dasharray:.3 .3}
+.side.wl{opacity:.55}
+.tok.off{opacity:.55}
+.tok.bump .ring{display:block;stroke:#ff5a6a;stroke-width:.2}
+.warnline{stroke:#ff5a6a;stroke-width:.09;stroke-dasharray:.25 .15}
+.warntxt{fill:#ff8a96;font-family:var(--f-mono);font-size:.5px;font-weight:700;text-anchor:middle;paint-order:stroke;stroke:var(--stage);stroke-width:.2px}
+.via{cursor:move}
+.via rect{fill:var(--stage);stroke:var(--stage-mark);stroke-width:.1}
+.via.on rect{fill:var(--stage-mark)}
+.via:hover rect{stroke:#fff}
+.path.out{stroke-dasharray:none;opacity:.9;stroke-width:.1}
+.prop{cursor:grab}
+.prop rect{fill:rgba(233,226,246,.16);stroke:rgba(233,226,246,.55);stroke-width:.07}
+.prop .pi{fill:var(--stage-ink);font-size:.8px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.prop .pn{fill:rgba(233,226,246,.75);font-family:var(--f-body);font-size:.46px;font-weight:700;text-anchor:middle;pointer-events:none}
+.prop.off{opacity:.5}
 .gh-dot{fill-opacity:.42;stroke:#fff;stroke-width:.08;stroke-dasharray:.22 .14}
 .gh-txt{fill:#fff;fill-opacity:.85;font-family:var(--f-body);font-weight:800;font-size:.62px;text-anchor:middle;dominant-baseline:central}
 .gh-line{stroke-width:.06;stroke-dasharray:.2 .18;opacity:.7}
@@ -292,7 +363,7 @@ td select{max-width:140px}
 .welcome li{margin:3px 0}
 
 .banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:13px}
-.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:999px;font-weight:600;font-size:13px;z-index:20;max-width:calc(100vw - 32px)}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:999px;font-weight:600;font-size:13px;z-index:20;max-width:calc(100vw - 32px)}
 .modal{position:fixed;inset:0;background:rgba(10,6,20,.5);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
 .modal .box{background:var(--surface);border-radius:14px;padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px}
 .kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px}
@@ -330,7 +401,7 @@ td select{max-width:140px}
 const PALETTE=["#e0457b","#19a974","#2f7de1","#f29a1f","#9b5de5","#00a9b5","#e8603c","#c9a227","#5c6bc0","#d6409f","#43a047","#a1887f","#ef5350","#26c6da","#7e57c2","#8bc34a"];
 const MOVES=["Thumka","Chakkar spin","Jhatka","Bhangra shoulders","Lehra arms","Mudra pose","Floor drop","Lift","Ripple","Canon","Clap","Freeze"];
 const TEMPLATE_GROUPS=[
-  ["For {n} dancers",[["honeycomb","Honeycomb field"],["windows","Windows"],["clusters","Trios"],["files2","Two files"]]],
+  ["For {n} dancer{s}",[["honeycomb","Honeycomb field"],["windows","Windows"],["clusters","Trios"],["files2","Two files"]]],
   ["Lines & files",[["line","Horizontal line"],["file","Vertical file"],["diag","Diagonal, rising left"],["diag2","Diagonal, rising right"]]],
   ["Arcs & curves",[["arcFront","Arc toward audience"],["arcBack","Arc away"],["circle","Circle"],["arc","Arc + soloist"]]],
   ["Shapes",[["v","V to audience"],["invv","Inverted V"],["pyramid","Pyramid"],["diamond","Diamond"]]],
@@ -354,7 +425,7 @@ const parseHt=s=>{s=String(s).trim();let m=s.match(/^(\d)\s*['’ ]\s*(\d{1,2})?
 let team={name:"",roster:[],sessions:[],items:[]};
 let routines={};
 let motions={};
-const ui={swapFrom:null,swapMode:false,collect:false,phone:false,ptab:"spot",tab:"stage",rid:ls.get("8c.rid"),f:0,beat:0,sel:new Set(),mode:"edit",view:"top",showPaths:true,snap:true,playing:false,spot:ls.get("8c.spot"),shortFront:true};
+const ui={rate:1,loop:{on:false,a:1,b:2},counts:"off",flipX:!!(ls.get("8c.flip")||{}).x,flipY:!!(ls.get("8c.flip")||{}).y,warn:true,swapFrom:null,swapMode:false,collect:false,phone:false,ptab:"spot",tab:"stage",rid:ls.get("8c.rid"),f:0,beat:0,sel:new Set(),mode:"edit",view:"top",showPaths:true,snap:true,playing:false,spot:ls.get("8c.spot"),shortFront:true};
 let canWrite=true, backend="loading", db=null, sampler=null;
 const dirty={}, timers={}, inflight={}, again={};
 const undoStack=[];
@@ -376,13 +447,37 @@ function locate(r,beat){const s=starts(r);let i=r.formations.length-1;for(let k=
   const into=beat-s[i],f=r.formations[i];if(into<f.hold||i===r.formations.length-1)return{i,t:0,moving:false};return{i,t:clamp((into-f.hold)/Math.max(f.trans,.0001),0,1),moving:true}}
 function defaultSpot(r,id){const k=r.cast.indexOf(id);const n=Math.max(r.cast.length,1);const sp=Math.min(3,(r.W-4)/Math.max(n-1,1));return{x:+((k-(n-1)/2)*sp).toFixed(1),y:+(r.D*0.4).toFixed(1)}}
 function posIn(r,f,id){return f.pos[id]||defaultSpot(r,id)}
-function posAt(r,beat,id){const L=locate(r,beat);const a=posIn(r,r.formations[L.i],id);if(!L.moving)return a;const b=posIn(r,r.formations[L.i+1],id);const e=ease(L.t);return{x:a.x+(b.x-a.x)*e,y:a.y+(b.y-a.y)*e}}
+function posAt(r,beat,id){const L=locate(r,beat);if(!L.moving)return posIn(r,r.formations[L.i],id);return pathPt(r,L.i,id,ease(L.t))}
 function beatToSec(r,b){return r.offset+b*60/r.bpm}
 function secToBeat(r,s){return (s-r.offset)*r.bpm/60}
 const fmtTime=s=>{s=Math.max(0,s);return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`};
 const eightLabel=b=>{b=Math.max(0,b);return{eight:Math.floor(b/8)+1,count:Math.floor(b%8)+1}};
-function describePos(r,p){const x=Math.abs(p.x)<.25?"center":`${Math.abs(p.x).toFixed(1).replace(/\.0$/,"")} ft stage ${p.x>0?"left":"right"}`;
+function describePos(r,p){if(Math.abs(p.x)>r.W/2+.01)return `off stage ${p.x>0?"left":"right"}, in the wings`;const x=Math.abs(p.x)<.25?"center":`${Math.abs(p.x).toFixed(1).replace(/\.0$/,"")} ft stage ${p.x>0?"left":"right"}`;
   return `${x}, ${p.y.toFixed(1).replace(/\.0$/,"")} ft from the front`}
+
+
+/* ---------------- view mapping, wings, curved paths, props, spacing checks ---------------- */
+const WING=4;
+const VX=x=>ui.flipX?-x:x;
+function VY(r,y){return ui.flipY?y:r.D-y}
+const usesWings=r=>r.formations.some(f=>Object.values(f.pos||{}).some(p=>Math.abs(p.x)>r.W/2+.01))||r.formations.some(f=>Object.values(f.ppos||{}).some(p=>Math.abs(p.x)>r.W/2+.01));
+const wingsShown=r=>(ui.mode==="edit"&&!ui.phone)||usesWings(r);
+const XMIN=r=>-r.W/2-WING+.5,XMAX=r=>r.W/2+WING-.5;
+function pathPt(r,i,id,t){const f=r.formations[i],n=r.formations[i+1];const a=posIn(r,f,id);if(!n)return a;const b=posIn(r,n,id);const c=f.via&&f.via[id];
+  if(c){const u=1-t;return{x:u*u*a.x+2*u*t*c.x+t*t*b.x,y:u*u*a.y+2*u*t*c.y+t*t*b.y}}return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t}}
+const PROP_KINDS=[["chair","Chair","▭"],["stool","Stool","○"],["sticks","Dandiya sticks","⟋"],["dupatta","Dupatta","∿"],["other","Other","◆"]];
+const propIcon=k=>(PROP_KINDS.find(x=>x[0]===k)||PROP_KINDS[4])[2];
+function propIn(r,f,pid){return(f.ppos&&f.ppos[pid])||{x:0,y:r.D-3}}
+function propAt(r,beat,pid){const L=locate(r,beat);const a=propIn(r,r.formations[L.i],pid);if(!L.moving)return a;const b=propIn(r,r.formations[L.i+1],pid);const e=ease(L.t);return{x:a.x+(b.x-a.x)*e,y:a.y+(b.y-a.y)*e}}
+const gapOf=r=>r.minGap||2;
+const onStage=(r,p)=>Math.abs(p.x)<=r.W/2+.01;
+function warnPairs(r,i){const f=r.formations[i],ids=r.cast,g=gapOf(r),out=[];for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++){const pa=posIn(r,f,ids[a]),pb=posIn(r,f,ids[b]);if(!onStage(r,pa)||!onStage(r,pb))continue;const d=Math.hypot(pa.x-pb.x,pa.y-pb.y);if(d<g-1e-6)out.push([ids[a],ids[b],d])}return out}
+function crossPairs(r,i){const f=r.formations[i];if(!r.formations[i+1]||!f.trans)return[];const lim=Math.min(1.5,gapOf(r)*.75),ids=r.cast,out=[];
+  for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++){let m=Infinity,mt=0;for(let k=1;k<16;k++){const t=k/16,pa=pathPt(r,i,ids[a],t),pb=pathPt(r,i,ids[b],t);const d=Math.hypot(pa.x-pb.x,pa.y-pb.y);if(d<m){m=d;mt=t}}
+    const s0=posIn(r,f,ids[a]),s1=posIn(r,f,ids[b]),e0=posIn(r,r.formations[i+1],ids[a]),e1=posIn(r,r.formations[i+1],ids[b]);
+    if(m<lim&&Math.hypot(s0.x-s1.x,s0.y-s1.y)>=lim&&Math.hypot(e0.x-e1.x,e0.y-e1.y)>=lim)out.push([ids[a],ids[b],m,mt])}return out}
+function bumpsAt(r,beat){const L=locate(r,beat),out=new Set();if(!L.moving)return out;const lim=Math.min(1.5,gapOf(r)*.75);const P=r.cast.map(id=>[id,posAt(r,beat,id)]);
+  for(let a=0;a<P.length;a++)for(let b=a+1;b<P.length;b++){if(Math.hypot(P[a][1].x-P[b][1].x,P[a][1].y-P[b][1].y)<lim){out.add(P[a][0]);out.add(P[b][0])}}return out}
 
 /* ---------------- templates ---------------- */
 function template(kind,n,W,D){const P=[];if(!n)return P;const cx=0,mid=D*0.45,sp=n>1?Math.min(3,(W-4)/(n-1)):0;
@@ -474,6 +569,8 @@ function renderStageTab(m){
     <button class="btn sm ghost w" id="rRen">Rename</button>
     <button class="btn sm ghost w" id="rDup">Duplicate</button>
     <button class="btn sm ghost danger w" id="rDel">Delete</button>
+    <button class="btn sm ghost" id="rPrint" title="Print a spot sheet for every dancer plus a spike-tape map">Print sheets</button>
+    <button class="btn sm ghost" id="rVideo" title="Record the routine with its music as a video file">Export video</button>
     <button class="btn sm pri" id="rShare">Share</button>
     <button class="btn sm" id="rImport">Open file</button>
     <button class="btn sm" id="rPhone">iPhone view</button>
@@ -500,7 +597,9 @@ function renderStageTab(m){
         <div class="seltools" id="selTools" hidden><button class="btn sm" id="collectBtn">+ Collect</button><button class="btn sm" id="clearBtn">Clear</button></div>
         <div class="swapbar" id="swapBar" role="status" hidden><span id="swapMsg"></span><button class="btn sm" id="barBtn">Cancel</button></div>
         <div class="transport" id="transport"></div>
+        <div class="practice" id="practice"></div>
       </div>
+      <div class="vidcard" id="vidCard" hidden></div>
       <div class="timeline" id="timeline"></div>
     </div>
     <aside class="panel" id="inspector"></aside>
@@ -508,7 +607,7 @@ function renderStageTab(m){
   bindStageTab(m);
   if(!cast.length&&ui.mode==="edit")$("#inspector").innerHTML=`<div class="sec"><b>No dancers in this routine yet</b><p class="hint">Add your team on the Team tab, then tick who dances in “${esc(r.title)}”.</p><button class="btn pri" id="goTeam">Add dancers</button></div>`,$("#goTeam").onclick=()=>{ui.tab="team";render()};
   else renderInspector();
-  buildStage();renderTimeline();renderTransport();drawFrame();
+  buildStage();renderTimeline();renderTransport();drawFrame();loadVidFor(r);renderVidCard();
 }
 function welcomeHTML(){const demo=template("v",9,32,24);return `
   <div class="welcome">
@@ -550,6 +649,7 @@ function loadSample(){
 function bindStageTab(m){
   $("#rSel",m).onchange=e=>{stop();ui.rid=e.target.value;ui.f=0;ui.beat=0;ui.sel.clear();render()};
   $("#rNew",m).onclick=newRoutineFlow;
+  $("#rPrint",m).onclick=printSheets;$("#rVideo",m).onclick=openExport;
   $("#rShare",m).onclick=shareRoutine;$("#rImport",m).onclick=pickImport;
   $("#rPhone",m).onclick=()=>{stop();location.hash="phone"};
   $("#rRen",m).onclick=()=>{const r=R();promptBox("Rename routine",r.title,"Save",v=>{pushUndo();r.title=v;saveRoutine(r);render()})};
@@ -565,17 +665,19 @@ function bindStageTab(m){
 
 /* ----- stage svg ----- */
 let svgReady=false;
-function buildStage(){const r=R();const svg=$("#stageSvg");if(!svg)return;const{W,D}=r;const pad=1.8;
-  svg.setAttribute("viewBox",`${-W/2-pad} ${-pad} ${W+pad*2} ${D+pad+2.2}`);
+function buildStage(){const r=R();const svg=$("#stageSvg");if(!svg)return;const{W,D}=r;const pad=1.8;const ww=wingsShown(r)?WING:0;
+  const top=ui.flipY?-(pad+2.2):-pad;svg.setAttribute("viewBox",`${-W/2-ww-pad} ${top} ${W+2*ww+pad*2} ${D+pad*2+2.2}`);
   let g="";for(let x=-W/2;x<=W/2+1e-6;x+=1)g+=`<line class="${Math.round(x)%2===0?"gl2":"gl"}" x1="${x}" y1="0" x2="${x}" y2="${D}" ${Math.round(x)%2===0?"":"opacity=\".6\""}/>`;
   for(let y=0;y<=D+1e-6;y+=1)g+=`<line class="${Math.round(y)%2===0?"gl2":"gl"}" x1="${-W/2}" y1="${y}" x2="${W/2}" y2="${y}" ${Math.round(y)%2===0?"":"opacity=\".6\""}/>`;
-  let nums="";for(let x=-Math.floor(W/4)*2;x<=W/2;x+=2)nums+=`<text class="num" x="${x}" y="${D+1.05}">${Math.abs(x)}</text>`;
-  svg.innerHTML=`<rect class="floor" x="${-W/2}" y="0" width="${W}" height="${D}" rx=".4"/>${g}
+  const ny=ui.flipY?-.45:D+1.05;let nums="";for(let x=-Math.floor(W/4)*2;x<=W/2;x+=2)nums+=`<text class="num" x="${VX(x)}" y="${ny}">${Math.abs(x)}</text>`;
+  const wings=ww?[-1,1].map(sd=>`<rect class="wing" x="${sd<0?-W/2-ww:W/2}" y="0" width="${ww}" height="${D}"/><text class="side wl" transform="translate(${sd*(W/2+ww/2)} ${D/2}) rotate(${sd*90})">WINGS</text>`).join(""):"";
+  const leftLbl=ui.flipX?"STAGE LEFT":"STAGE RIGHT",rightLbl=ui.flipX?"STAGE RIGHT":"STAGE LEFT";const sx=W/2+ww+.8;
+  svg.innerHTML=`${wings}<rect class="floor" x="${-W/2}" y="0" width="${W}" height="${D}" rx=".4"/>${g}
     <line class="cl" x1="0" y1="0" x2="0" y2="${D}"/><line class="cl" x1="${-W/2}" y1="${D/2}" x2="${W/2}" y2="${D/2}"/>
-    ${nums}<text class="side" x="0" y="-.6">UPSTAGE</text><text class="side" x="0" y="${D+1.95}">AUDIENCE</text>
-    <text class="side" transform="translate(${-W/2-.8} ${D/2}) rotate(-90)">STAGE RIGHT</text>
-    <text class="side" transform="translate(${W/2+.8} ${D/2}) rotate(90)">STAGE LEFT</text>
-    <g id="lPaths"></g><g id="lToks"></g><g id="lGhost" pointer-events="none"></g><rect class="marq" id="marq" hidden/>`;
+    ${nums}<text class="side" x="0" y="${ui.flipY?D+1.25:-.6}">UPSTAGE</text><text class="side" x="0" y="${ui.flipY?-1.6:D+1.95}">AUDIENCE${ui.flipX||ui.flipY?" · MIRRORED VIEW":""}</text>
+    <text class="side" transform="translate(${-sx} ${D/2}) rotate(-90)">${leftLbl}</text>
+    <text class="side" transform="translate(${sx} ${D/2}) rotate(90)">${rightLbl}</text>
+    <g id="lPaths"></g><g id="lProps"></g><g id="lToks"></g><g id="lHandles"></g><g id="lGhost" pointer-events="none"></g><rect class="marq" id="marq" hidden/>`;
   svgReady=true;buildTokens();bindStage(svg)}
 function buildTokens(){const r=R();const L=$("#lToks");if(!L)return;
   L.innerHTML=castOf(r).map(d=>`<g class="tok" data-id="${d.id}" tabindex="-1"><circle class="ring" r="1.3"/><circle class="b" r=".95" fill="${d.color}"/><text class="i">${esc(initials(d.name))}</text><text class="nm" y="-1.35">${esc(shortName(d.name))}</text><text class="mv" y="1.75"></text></g>`).join("")}
@@ -586,41 +688,53 @@ function drawFrame(){const r=R();if(!r)return;const beat=ui.beat;const L=locate(
   if(ui.view==="3d")draw3d(r,beat,L);else drawTop(r,beat,L);
   updateCounter(r,beat);movePlayhead(r,beat);if(ui.phone)updatePhoneCue(r,beat,L);placeSwapUI(r,L);
 }
-function drawTop(r,beat,L){const T=$("#lToks");if(!T)return;const D=r.D;const cur=r.formations[L.i];const spotId=ui.mode==="spot"?ui.spot:null;
-  $$(".tok",T).forEach(g=>{const id=g.dataset.id;const p=posAt(r,beat,id);g.setAttribute("transform",`translate(${p.x.toFixed(3)} ${(D-p.y).toFixed(3)})`);
+function drawTop(r,beat,L){const T=$("#lToks");if(!T)return;const cur=r.formations[L.i];const spotId=ui.mode==="spot"?ui.spot:null;const W2=r.W/2;
+  const bump=ui.warn&&L.moving&&ui.mode==="edit"?bumpsAt(r,beat):new Set();
+  $$(".tok",T).forEach(g=>{const id=g.dataset.id;const p=posAt(r,beat,id);g.setAttribute("transform",`translate(${VX(p.x).toFixed(3)} ${VY(r,p.y).toFixed(3)})`);
     g.classList.toggle("sel",ui.mode==="edit"&&ui.sel.has(id));g.classList.toggle("me",spotId===id);g.classList.toggle("dim",!!spotId&&spotId!==id);
+    g.classList.toggle("off",Math.abs(p.x)>W2+.05);g.classList.toggle("bump",bump.has(id));
     const mv=L.moving?"":(cur.moves[id]||(cur.motion&&motions[cur.motion[id]]?"▶ "+motions[cur.motion[id]].name:""));const t=$(".mv",g);if(t.textContent!==mv)t.textContent=mv});
-  const P=$("#lPaths");if(!P)return;let h="";
+  const PR=$("#lProps");if(PR)PR.innerHTML=(r.props||[]).map(pr=>{const q=propAt(r,beat,pr.id);return `<g class="prop${Math.abs(q.x)>W2+.05?" off":""}" data-prop="${pr.id}" transform="translate(${VX(q.x).toFixed(3)} ${VY(r,q.y).toFixed(3)})"><rect x="-.95" y="-.7" width="1.9" height="1.4" rx=".35"/><text class="pi">${esc(propIcon(pr.kind))}</text><text class="pn" y="1.4">${esc(pr.name)}</text></g>`}).join("");
+  const P=$("#lPaths");if(!P)return;let h="",hh="";const pt=q=>`${VX(q.x).toFixed(3)} ${VY(r,q.y).toFixed(3)}`;
   if(ui.showPaths&&!ui.playing&&!L.moving){const prev=r.formations[L.i-1],next=r.formations[L.i+1];
     castOf(r).forEach(d=>{if(spotId&&spotId!==d.id)return;const a=posIn(r,cur,d.id);
-      if(prev){const p=posIn(r,prev,d.id);if(Math.hypot(p.x-a.x,p.y-a.y)>.2)h+=`<circle class="ghost" cx="${p.x}" cy="${D-p.y}" r=".95" stroke="${d.color}"/><line class="path" x1="${p.x}" y1="${D-p.y}" x2="${a.x}" y2="${D-a.y}" stroke="${d.color}"/>`}
-      if(spotId&&next){const n=posIn(r,next,d.id);if(Math.hypot(n.x-a.x,n.y-a.y)>.2)h+=`<line class="path" x1="${a.x}" y1="${D-a.y}" x2="${n.x}" y2="${D-n.y}" stroke="#fff" marker-end=""/><circle cx="${n.x}" cy="${D-n.y}" r=".35" fill="#fff" opacity=".8"/>`}})}
-  P.innerHTML=h}
+      if(prev&&!spotId){const p=posIn(r,prev,d.id);if(Math.hypot(p.x-a.x,p.y-a.y)>.2){const c=prev.via&&prev.via[d.id];
+        h+=`<circle class="ghost" cx="${VX(p.x)}" cy="${VY(r,p.y)}" r=".95" stroke="${d.color}"/><path class="path" d="M ${pt(p)} ${c?"Q "+pt(c)+" ":"L "}${pt(a)}" stroke="${d.color}"/>`}}
+      const showOut=spotId===d.id||(ui.mode==="edit"&&ui.sel.has(d.id));
+      if(next&&showOut){const n=posIn(r,next,d.id);if(Math.hypot(n.x-a.x,n.y-a.y)>.2){const c=cur.via&&cur.via[d.id];
+        h+=`<path class="path out" d="M ${pt(a)} ${c?"Q "+pt(c)+" ":"L "}${pt(n)}" stroke="${spotId?"#fff":d.color}"/><circle cx="${VX(n.x)}" cy="${VY(r,n.y)}" r=".35" fill="${spotId?"#fff":d.color}" opacity=".85"/>`;
+        if(ui.mode==="edit"&&canWrite&&cur.trans){const m=pathPt(r,L.i,d.id,.5);hh+=`<g class="via${c?" on":""}" data-via="${d.id}" transform="translate(${pt(m)})"><title>Drag to curve the path · double-click to straighten</title><rect x="-.4" y="-.4" width=".8" height=".8" transform="rotate(45)"/></g>`}}}});
+    if(ui.warn&&ui.mode==="edit")warnPairs(r,L.i).forEach(([a,b,dd])=>{const pa=posIn(r,cur,a),pb=posIn(r,cur,b);const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+      h+=`<line class="warnline" x1="${VX(pa.x)}" y1="${VY(r,pa.y)}" x2="${VX(pb.x)}" y2="${VY(r,pb.y)}"/><text class="warntxt" x="${VX(mx)}" y="${VY(r,my)-.35}">${dd.toFixed(1)} ft</text>`})}
+  P.innerHTML=h;const HL=$("#lHandles");if(HL)HL.innerHTML=hh}
 
 /* ----- 3D audience view (canvas projection) ----- */
 function draw3d(r,beat,L){const cv=$("#stage3d");if(!cv)return;const box=cv.getBoundingClientRect();const w=Math.max(280,box.width||cv.parentElement.clientWidth-20),h=Math.round(w*0.56);const dpr=window.devicePixelRatio||1;
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px"}
-  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);const css=getComputedStyle(document.documentElement);
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);render3d(c,w,h,r,beat,L)}
+function render3d(c,w,h,r,beat,L){const css=getComputedStyle(document.documentElement);
   const bg=css.getPropertyValue("--stage").trim(),fl=css.getPropertyValue("--stage-2").trim(),mark=css.getPropertyValue("--stage-mark").trim();
-  c.fillStyle=bg;c.fillRect(0,0,w,h);const{W,D}=r;const pr=makeProj(w,h,W,D);
+  c.fillStyle=bg;c.fillRect(0,0,w,h);const{W,D}=r;const pr=makeProj(w,h,W,D);const pr3=(x,y,z)=>pr(x,y,z||0);
   c.beginPath();[[-W/2,0],[W/2,0],[W/2,D],[-W/2,D]].forEach(([x,y],k)=>{const p=pr(x,y,0);k?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])});c.closePath();c.fillStyle=fl;c.fill();
   c.lineWidth=1;c.strokeStyle="rgba(255,255,255,.07)";
   for(let x=-W/2;x<=W/2;x+=2){const a=pr(x,0,0),b=pr(x,D,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}
   for(let y=0;y<=D;y+=2){const a=pr(-W/2,y,0),b=pr(W/2,y,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}
   c.strokeStyle=mark;c.globalAlpha=.5;c.setLineDash([4,4]);{const a=pr(0,0,0),b=pr(0,D,0);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}c.setLineDash([]);c.globalAlpha=1;
   const spotId=ui.mode==="spot"?ui.spot:null;const cur=r.formations[L.i];
-  const ds=castOf(r).map(d=>({d,p:posAt(r,beat,d.id)})).sort((a,b)=>b.p.y-a.p.y);
+  const fx=(ui.flipX?-1:1)*(ui.flipY?-1:1),fd=ui.flipY?-1:1;const vp=q=>({x:q.x*fx,y:ui.flipY?D-q.y:q.y});
+  (r.props||[]).forEach(pr=>{const q=vp(propAt(r,beat,pr.id));const a=pr3(q.x-.8,q.y-.6),b=pr3(q.x+.8,q.y-.6),cc=pr3(q.x+.8,q.y+.6),dd=pr3(q.x-.8,q.y+.6),up=pr3(q.x,q.y,1.4);c.globalAlpha=Math.abs(q.x)>W/2?.35:1;c.fillStyle="rgba(233,226,246,.28)";c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.lineTo(cc[0],cc[1]);c.lineTo(dd[0],dd[1]);c.closePath();c.fill();c.fillStyle="rgba(233,226,246,.7)";c.font="600 11px Manrope, system-ui, sans-serif";c.textAlign="center";c.fillText(pr.name,up[0],up[1]);c.globalAlpha=1});
+  const ds=castOf(r).map(d=>({d,p:vp(posAt(r,beat,d.id))})).sort((a,b)=>b.p.y-a.p.y);
   c.textAlign="center";
   ds.forEach(({d,p})=>{const H=(d.height||66)/12;const base=pr(p.x,p.y,0),top=pr(p.x,p.y,H*0.84),head=pr(p.x,p.y,H*0.93);const s=base[2];
-    c.globalAlpha=spotId&&spotId!==d.id?.3:1;
+    c.globalAlpha=(spotId&&spotId!==d.id?.3:1)*(Math.abs(p.x)>W/2+.05?.4:1);
     c.fillStyle="rgba(0,0,0,.35)";c.beginPath();c.ellipse(base[0],base[1],0.75*s,0.22*s,0,0,Math.PI*2);c.fill();
-    const mo=motionAt(r,L,beat,d.id);if(mo){if(spotId===d.id){c.strokeStyle="#fff";c.lineWidth=2;c.beginPath();c.ellipse(base[0],base[1],0.95*s,0.3*s,0,0,Math.PI*2);c.stroke()}const hd=drawFigure(c,pr,p,mo.joints,(H*0.93)/mo.ref,d.color);c.fillStyle="#e9e2f6";c.font=`600 ${Math.max(9,Math.min(13,0.34*s))}px Manrope, system-ui, sans-serif`;c.fillText(shortName(d.name),hd[0],hd[1]-0.5*s);return}
+    const mo=motionAt(r,L,beat,d.id);if(mo){if(spotId===d.id){c.strokeStyle="#fff";c.lineWidth=2;c.beginPath();c.ellipse(base[0],base[1],0.95*s,0.3*s,0,0,Math.PI*2);c.stroke()}const hd=drawFigure(c,pr,p,mo.joints.map(j=>[j[0]*fx,j[1],j[2]*fd]),(H*0.93)/mo.ref,d.color);c.fillStyle="#e9e2f6";c.font=`600 ${Math.max(9,Math.min(13,0.34*s))}px Manrope, system-ui, sans-serif`;c.fillText(shortName(d.name),hd[0],hd[1]-0.5*s);return}
     const bw=0.62*s;c.fillStyle=d.color;c.beginPath();c.moveTo(base[0]-bw*0.55,base[1]);c.lineTo(top[0]-bw*0.5,top[1]+bw*0.4);c.quadraticCurveTo(top[0],top[1]-bw*0.1,top[0]+bw*0.5,top[1]+bw*0.4);c.lineTo(base[0]+bw*0.55,base[1]);c.closePath();c.fill();
     c.beginPath();c.arc(head[0],head[1],0.3*s,0,Math.PI*2);c.fill();
     if(spotId===d.id){c.strokeStyle="#fff";c.lineWidth=2;c.beginPath();c.ellipse(base[0],base[1],0.95*s,0.3*s,0,0,Math.PI*2);c.stroke()}
     c.fillStyle="#e9e2f6";c.font=`600 ${Math.max(9,Math.min(13,0.34*s))}px Manrope, system-ui, sans-serif`;c.fillText(shortName(d.name),head[0],head[1]-0.42*s);
     const mv=L.moving?"":cur.moves[d.id];if(mv){c.fillStyle=mark;c.font=`700 ${Math.max(8,Math.min(11,0.28*s))}px Manrope, system-ui, sans-serif`;c.fillText(mv,base[0],base[1]+0.55*s+6)}});
-  c.globalAlpha=1;c.fillStyle="rgba(233,226,246,.45)";c.font="700 10px Manrope, system-ui, sans-serif";c.fillText("YOU ARE IN THE AUDIENCE",w/2,h-6)}
+  c.globalAlpha=1;c.fillStyle="rgba(233,226,246,.45)";c.font="700 10px Manrope, system-ui, sans-serif";c.fillText(ui.flipY?"VIEW FROM THE BACK OF THE STAGE"+(ui.flipX?" · MIRRORED":""):ui.flipX?"AUDIENCE VIEW · MIRRORED":"YOU ARE IN THE AUDIENCE",w/2,h-6)}
 
 
 /* ---------------- motion capture: shared helpers ---------------- */
@@ -668,16 +782,16 @@ function bindSpacing(el,r,f){const inp=$("#iSpace",el);if(!inp)return;
 
 /* ----- drag preview: a see-through copy follows the pointer ----- */
 function clearGhost(){const g=$("#lGhost");if(g)g.innerHTML="";$("#stageSvg")?.classList.remove("dragging")}
-function drawGhost(r){const g=$("#lGhost");if(!g||!drag||!drag.preview)return;const D=r.D;let h="";const ids=Object.keys(drag.preview);
+function drawGhost(r){const g=$("#lGhost");if(!g||!drag||!drag.preview)return;let h="";const ids=Object.keys(drag.preview);
   ids.forEach(id=>{const d=dancer(id);if(!d)return;const o=drag.orig[id],q=drag.preview[id];
-    h+=`<line class="gh-line" x1="${o.x}" y1="${D-o.y}" x2="${q.x}" y2="${D-q.y}" stroke="${d.color}"/>`});
+    h+=`<line class="gh-line" x1="${VX(o.x)}" y1="${VY(r,o.y)}" x2="${VX(q.x)}" y2="${VY(r,q.y)}" stroke="${d.color}"/>`});
   ids.forEach(id=>{const d=dancer(id);if(!d)return;const q=drag.preview[id];
-    h+=`<circle class="gh-dot" cx="${q.x}" cy="${D-q.y}" r=".95" fill="${d.color}"/><text class="gh-txt" x="${q.x}" y="${D-q.y}">${esc(initials(d.name))}</text>`});
-  const P=ids.map(id=>drag.preview[id]);const top=Math.max(...P.map(q=>q.y)),cx=(Math.min(...P.map(q=>q.x))+Math.max(...P.map(q=>q.x)))/2;
+    h+=`<circle class="gh-dot" cx="${VX(q.x)}" cy="${VY(r,q.y)}" r=".95" fill="${d.color}"/><text class="gh-txt" x="${VX(q.x)}" y="${VY(r,q.y)}">${esc(initials(d.name))}</text>`});
+  const P=ids.map(id=>drag.preview[id]);const topS=Math.min(...P.map(q=>VY(r,q.y))),cx=(Math.min(...P.map(q=>VX(q.x)))+Math.max(...P.map(q=>VX(q.x))))/2;
   const id0=ids[0],dx=drag.preview[id0].x-drag.orig[id0].x,dy=drag.preview[id0].y-drag.orig[id0].y;const ft=v=>(+Math.abs(v).toFixed(1)).toString();
   const parts=[];if(Math.abs(dx)>=.05)parts.push(`${ft(dx)} ft stage ${dx>0?"left":"right"}`);if(Math.abs(dy)>=.05)parts.push(`${ft(dy)} ft ${dy>0?"upstage":"downstage"}`);
-  const lbl=(ids.length>1?`${ids.length} dancers · `:"")+(parts.join(", ")||"no change");
-  h+=`<text class="gh-lbl" x="${clamp(cx,-r.W/2+4,r.W/2-4)}" y="${Math.max(.8,D-top-1.9)}">${esc(lbl)}</text>`;
+  const off=P.some(q=>Math.abs(q.x)>r.W/2+.05);const lbl=(ids.length>1?`${ids.length} dancers · `:"")+(parts.join(", ")||"no change")+(off?" · into the wings":"");
+  h+=`<text class="gh-lbl" x="${clamp(cx,-r.W/2+4,r.W/2-4)}" y="${Math.max(.8,topS-1.9)}">${esc(lbl)}</text>`;
   g.innerHTML=h;$("#stageSvg")?.classList.add("dragging")}
 
 /* ----- swap two dancers ----- */
@@ -702,15 +816,19 @@ function finishCollect(){ui.collect=false;const n=ui.sel.size;drawFrame();render
   if(n>1)toast(`${n} dancers selected. Tap a template to arrange just them, or drag one to move the group.`)}
 function swapDancers(a,b){const r=R();const f=r.formations[ui.f];const da=dancer(a),db=dancer(b);pushUndo();
   const pa={...posIn(r,f,a)},pb={...posIn(r,f,b)};f.pos[a]=pb;f.pos[b]=pa;
-  const sw=o=>{if(!o)return;const x=o[a],y=o[b];if(y!==undefined)o[a]=y;else delete o[a];if(x!==undefined)o[b]=x;else delete o[b]};sw(f.moves);sw(f.motion);
+  const sw=o=>{if(!o)return;const x=o[a],y=o[b];if(y!==undefined)o[a]=y;else delete o[a];if(x!==undefined)o[b]=x;else delete o[b]};sw(f.moves);sw(f.motion);sw(f.via);
   ui.swapFrom=null;ui.sel.clear();saveRoutine(r);drawFrame();renderInspector();toast(`Swapped ${da?da.name:"dancers"} and ${db?db.name:""} in “${f.name}” · Ctrl+Z to undo`)}
 
 /* ----- stage interaction ----- */
-let drag=null;
-function svgPt(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();if(!m)return{x:0,y:0};const p=pt.matrixTransform(m.inverse());return{x:p.x,y:R().D-p.y}}
+let drag=null,lastVia={};
+function svgPt(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();if(!m)return{x:0,y:0};const p=pt.matrixTransform(m.inverse());const r=R();return{x:ui.flipX?-p.x:p.x,y:ui.flipY?p.y:r.D-p.y}}
 function bindStage(svg){
   svg.onpointerdown=e=>{if(ui.mode!=="edit"||!canWrite)return;const r=R();stop();const L=locate(r,ui.beat);if(L.moving){seekFormation(L.i);}
     const tok=e.target.closest(".tok");
+    const vh=e.target.closest(".via");if(vh){const id=vh.dataset.via,f=r.formations[ui.f],now=performance.now();
+      if(lastVia.id===id&&now-lastVia.t<380){lastVia={};pushUndo();if(f.via)delete f.via[id];saveRoutine(r);drawFrame();renderTimeline();renderInspector();toast("Path straightened");return}
+      lastVia={id,t:now};drag={kind:"via",id,moved:false};svg.setPointerCapture(e.pointerId);return}
+    const pgr=e.target.closest(".prop");if(pgr&&!ui.swapMode&&!ui.collect){const pid=pgr.dataset.prop,f=r.formations[ui.f];drag={kind:"prop",pid,start:svgPt(svg,e),orig:{...propIn(r,f,pid)},moved:false};svg.setPointerCapture(e.pointerId);return}
     if(ui.swapMode){const id=tok&&tok.dataset.id;if(!id||id===ui.swapFrom)ui.swapFrom=null;else if(!ui.swapFrom){ui.swapFrom=id;ui.sel.clear()}else{swapDancers(ui.swapFrom,id);return}drawFrame();renderInspector();return}
     if(ui.collect){if(tok){const id=tok.dataset.id;ui.sel.has(id)?ui.sel.delete(id):ui.sel.add(id);drawFrame();renderInspector()}return}
     const p=svgPt(svg,e);
@@ -719,21 +837,25 @@ function bindStage(svg){
     else{if(!(e.shiftKey||e.metaKey||e.ctrlKey))ui.sel.clear();drag={kind:"marq",start:p}}
     svg.setPointerCapture(e.pointerId);drawFrame();renderInspector()};
   svg.onpointermove=e=>{if(!drag)return;const r=R();const p=svgPt(svg,e);const f=r.formations[ui.f];
+    if(drag.kind==="via"){const n=r.formations[ui.f+1];if(!n)return;const a=posIn(r,f,drag.id),b=posIn(r,n,drag.id);if(!drag.moved){pushUndo();drag.moved=true}
+      f.via=f.via||{};f.via[drag.id]={x:+clamp(2*p.x-(a.x+b.x)/2,XMIN(r)-6,XMAX(r)+6).toFixed(2),y:+clamp(2*p.y-(a.y+b.y)/2,-6,r.D+6).toFixed(2)};drawFrame();return}
+    if(drag.kind==="prop"){let dx=p.x-drag.start.x,dy=p.y-drag.start.y;if(!drag.moved&&Math.hypot(dx,dy)<.15)return;if(!drag.moved){pushUndo();drag.moved=true}const st=ui.snap?.5:.1;
+      f.ppos=f.ppos||{};f.ppos[drag.pid]={x:+clamp(Math.round((drag.orig.x+dx)/st)*st,XMIN(r),XMAX(r)).toFixed(2),y:+clamp(Math.round((drag.orig.y+dy)/st)*st,.5,r.D-.5).toFixed(2)};drawFrame();return}
     if(drag.kind==="move"){let dx=p.x-drag.start.x,dy=p.y-drag.start.y;if(!drag.moved&&Math.hypot(dx,dy)<.15)return;drag.moved=true;
       const st=ui.snap?.5:.1;const ids=Object.keys(drag.orig),O=ids.map(id=>drag.orig[id]);const prev={};
-      if(ids.length===1){const o=O[0];prev[ids[0]]={x:+clamp(Math.round((o.x+dx)/st)*st,-r.W/2+.5,r.W/2-.5).toFixed(2),y:+clamp(Math.round((o.y+dy)/st)*st,.5,r.D-.5).toFixed(2)}}
+      if(ids.length===1){const o=O[0];prev[ids[0]]={x:+clamp(Math.round((o.x+dx)/st)*st,XMIN(r),XMAX(r)).toFixed(2),y:+clamp(Math.round((o.y+dy)/st)*st,.5,r.D-.5).toFixed(2)}}
       else{dx=Math.round(dx/st)*st;dy=Math.round(dy/st)*st;
-        dx=clamp(dx,-r.W/2+.5-Math.min(...O.map(o=>o.x)),r.W/2-.5-Math.max(...O.map(o=>o.x)));dy=clamp(dy,.5-Math.min(...O.map(o=>o.y)),r.D-.5-Math.max(...O.map(o=>o.y)));
+        dx=clamp(dx,XMIN(r)-Math.min(...O.map(o=>o.x)),XMAX(r)-Math.max(...O.map(o=>o.x)));dy=clamp(dy,.5-Math.min(...O.map(o=>o.y)),r.D-.5-Math.max(...O.map(o=>o.y)));
         ids.forEach((id,k)=>prev[id]={x:+(O[k].x+dx).toFixed(2),y:+(O[k].y+dy).toFixed(2)})}
       drag.preview=prev;drawGhost(r)}
     else{const m=$("#marq");const x1=Math.min(drag.start.x,p.x),x2=Math.max(drag.start.x,p.x),y1=Math.min(drag.start.y,p.y),y2=Math.max(drag.start.y,p.y);m.hidden=false;
-      m.setAttribute("x",x1);m.setAttribute("y",r.D-y2);m.setAttribute("width",x2-x1);m.setAttribute("height",y2-y1);drag.box=[x1,x2,y1,y2]}};
-  const end=()=>{if(!drag)return;const r=R();clearGhost();if(drag.kind==="move"&&drag.moved&&drag.preview){const f=r.formations[ui.f];const ch=Object.keys(drag.preview).some(id=>{const a=drag.orig[id],b=drag.preview[id];return a.x!==b.x||a.y!==b.y});if(ch){pushUndo();Object.assign(f.pos,drag.preview);saveRoutine(r);renderTimeline()}}
+      const sx=[VX(x1),VX(x2)],sy=[VY(r,y1),VY(r,y2)];m.setAttribute("x",Math.min(...sx));m.setAttribute("y",Math.min(...sy));m.setAttribute("width",x2-x1);m.setAttribute("height",y2-y1);drag.box=[x1,x2,y1,y2]}};
+  const end=()=>{if(!drag)return;const r=R();clearGhost();if((drag.kind==="via"||drag.kind==="prop")&&drag.moved){saveRoutine(r);renderTimeline();renderInspector()}if(drag.kind==="move"&&drag.moved&&drag.preview){const f=r.formations[ui.f];const ch=Object.keys(drag.preview).some(id=>{const a=drag.orig[id],b=drag.preview[id];return a.x!==b.x||a.y!==b.y});if(ch){pushUndo();Object.assign(f.pos,drag.preview);saveRoutine(r);renderTimeline()}}
     if(drag.kind==="marq"&&drag.box){const[x1,x2,y1,y2]=drag.box;const f=r.formations[ui.f];r.cast.forEach(id=>{const p=posIn(r,f,id);if(p.x>=x1&&p.x<=x2&&p.y>=y1&&p.y<=y2)ui.sel.add(id)});$("#marq").hidden=true}
     drag=null;drawFrame();renderInspector()};
   svg.onpointerup=end;svg.onpointercancel=end;
 }
-function seekFormation(i){const r=R();ui.f=i;ui.beat=starts(r)[i];const au=$("#au");if(hasSong()&&!ui.playing){try{au.currentTime=Math.max(0,beatToSec(r,ui.beat))}catch(e){}}}
+function seekFormation(i){const r=R();ui.f=i;ui.beat=starts(r)[i];const au=$("#au");if(hasSong()&&!ui.playing){try{au.currentTime=Math.max(0,beatToSec(r,ui.beat))}catch(e){}}if(!ui.playing)syncVideo(true)}
 
 /* ----- transport ----- */
 function renderTransport(){const r=R();const t=$("#transport");if(!t||!r)return;
@@ -747,47 +869,155 @@ function renderTransport(){const r=R();const t=$("#transport");if(!t||!r)return;
     <span class="sm hint" style="color:rgba(233,226,246,.7)">${song?"♪ "+esc(r.songName||"Song loaded"):r.songName?"♪ Load your copy of “"+esc(r.songName)+"”":"No song yet"}</span>
     <button class="btn sm" id="tSong">${song?"Change song":"Load song"}</button>`;
   $("#tPlay").onclick=toggle;$("#tPrev").onclick=()=>step(-1);$("#tNext").onclick=()=>step(1);$("#tSong").onclick=()=>$("#songFile").click();
-  updateCounter(r,ui.beat)}
+  updateCounter(r,ui.beat);renderPractice()}
 function updateCounter(r,beat){const e=eightLabel(beat);const a=$("#cEight");if(!a)return;a.textContent=`${e.eight}·${e.count}`;
   $$("#cDots span").forEach((s,k)=>s.classList.toggle("on",k<e.count));$("#cTime").textContent=`${fmtTime(beatToSec(r,beat))}${r.songDur?" / "+fmtTime(r.songDur):""}`}
 function step(d){stop();const r=R();const L=locate(r,ui.beat);seekFormation(clamp(L.i+d,0,r.formations.length-1));ui.sel.clear();drawFrame();renderInspector();renderTimeline()}
 let raf=0,clock0=0,beat0=0;
 function toggle(){ui.playing?stop():play()}
-function play(){const r=R();if(!r||!r.formations.length)return;const tot=totalBeats(r);if(ui.beat>=tot-.01)ui.beat=0;ui.playing=true;ui.sel.clear();
-  const au=$("#au");if(hasSong()){try{au.currentTime=Math.max(0,beatToSec(r,ui.beat));au.playbackRate=1}catch(e){}au.play().catch(()=>{toast("Tap play again to start the song")});}
-  clock0=performance.now();beat0=ui.beat;renderTransport();phoneControls();const loop=()=>{if(!ui.playing)return;const r=R();
-    if(hasSong()&&!au.paused){ui.beat=secToBeat(r,au.currentTime)}else{ui.beat=beat0+(performance.now()-clock0)/1000*r.bpm/60}
+const canSpeak=typeof window!=="undefined"&&"speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined";
+let countTimers=[],lastSaid=-1;
+function loopRange(r){const a=Math.max(1,Math.round(ui.loop.a)||1),b=Math.max(a,Math.round(ui.loop.b)||a);return[(a-1)*8,b*8]}
+function say(t,rate){if(!canSpeak)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=rate||1.5;speechSynthesis.speak(u)}catch(e){}}
+function play(){const r=R();if(!r||!r.formations.length)return;const tot=totalBeats(r);if(ui.beat>=tot-.01)ui.beat=0;
+  if(ui.loop.on){const[lo,hi]=loopRange(r);if(ui.beat<lo||ui.beat>=hi)ui.beat=Math.min(lo,tot)}
+  ui.playing=true;ui.sel.clear();renderTransport();phoneControls();
+  if(ui.counts!=="off"&&canSpeak){const iv=60000/r.bpm/ui.rate;ui.counting=true;
+    ["5","6","7","8"].forEach((n,k)=>countTimers.push(setTimeout(()=>{if(!ui.playing)return;say(n,1.6);const a=$("#cEight");if(a)a.textContent=n},k*iv)));
+    countTimers.push(setTimeout(()=>{ui.counting=false;startRolling()},4*iv));return}
+  startRolling()}
+function startRolling(){const r=R();if(!ui.playing||!r)return;const au=$("#au");
+  if(hasSong()){try{au.currentTime=Math.max(0,beatToSec(r,ui.beat));au.playbackRate=ui.rate;au.preservesPitch=true;au.webkitPreservesPitch=true}catch(e){}au.play().catch(()=>{toast("Tap play again to start the song")})}
+  clock0=performance.now();beat0=ui.beat;lastSaid=Math.floor(ui.beat)-(ui.beat%1<.05?1:0);syncVideo(true);
+  const loop=()=>{if(!ui.playing)return;const r=R();
+    if(hasSong()&&!au.paused){ui.beat=secToBeat(r,au.currentTime)}else{ui.beat=beat0+(performance.now()-clock0)/1000*r.bpm/60*ui.rate}
+    if(ui.loop.on){const[lo,hi]=loopRange(r);const end=Math.min(hi,totalBeats(r));if(ui.beat>=end){ui.beat=lo;if(hasSong()){try{au.currentTime=Math.max(0,beatToSec(r,lo))}catch(e){}}clock0=performance.now();beat0=lo;lastSaid=lo-1;syncVideo(true)}}
     const tot=totalBeats(r);if(!hasSong()&&ui.beat>=tot){ui.beat=tot;stop();return}if(hasSong()&&au.ended){stop();return}
-    drawFrame();raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop)}
-function stop(){if(!ui.playing)return;ui.playing=false;cancelAnimationFrame(raf);const au=$("#au");try{au.pause()}catch(e){}
+    if(ui.counts==="all"&&canSpeak){const cb=Math.floor(ui.beat);if(cb!==lastSaid&&cb>=0){lastSaid=cb;say(String(cb%8+1),1.8)}}
+    syncVideo(false);drawFrame();raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop)}
+function stop(){if(!ui.playing)return;ui.playing=false;ui.counting=false;countTimers.forEach(clearTimeout);countTimers=[];if(canSpeak)try{speechSynthesis.cancel()}catch(e){}
+  cancelAnimationFrame(raf);const au=$("#au");try{au.pause()}catch(e){}pauseVideo();
   phoneControls();
   if(ui.tab==="stage"&&R()){const r=R();ui.beat=clamp(ui.beat,0,totalBeats(r));renderTransport();drawFrame();renderTimeline();renderInspector()}}
+function setRate(v){ui.rate=v;const au=$("#au");if(ui.playing){if(hasSong()&&!au.paused)au.playbackRate=v;else{beat0=ui.beat;clock0=performance.now()}}renderPractice();$$("[data-prate]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.prate===v)))}
+function setFlip(axis){if(axis==="x")ui.flipX=!ui.flipX;else ui.flipY=!ui.flipY;ls.set("8c.flip",{x:ui.flipX,y:ui.flipY});buildStage();drawFrame();renderPractice();
+  $("#pFlipX")?.setAttribute("aria-pressed",String(ui.flipX));$("#pFlipY")?.setAttribute("aria-pressed",String(ui.flipY));
+  toast(ui.flipX||ui.flipY?`Showing the stage ${[ui.flipX?"mirrored left to right":"",ui.flipY?"from the back":""].filter(Boolean).join(" and ")}`:"Back to the normal audience view")}
+function toggleLoop(){const r=R();if(!r)return;if(!ui.loop.on){const sec=sectionAt(r,ui.beat);if(sec){const g=sectionRange(r,sec);ui.loop.a=g.a;ui.loop.b=g.b}else{const e=Math.floor(ui.beat/8)+1;if(!(ui.loop.a>=1&&ui.loop.b>=ui.loop.a&&ui.loop.a<=e&&ui.loop.b>=e)){ui.loop.a=e;ui.loop.b=e+1}}}
+  ui.loop.on=!ui.loop.on;if(ui.playing){const[lo,hi]=loopRange(r);if(ui.loop.on&&(ui.beat<lo||ui.beat>=hi)){stop();ui.beat=lo;play()}}renderPractice();renderTimeline()}
+function renderPractice(){const el=$("#practice");const r=R();if(!el||!r)return;const L=ui.loop;
+  el.innerHTML=`<div class="pgrp"><span class="plbl">Speed</span><div class="seg dk">${[1,.75,.5].map(v=>`<button data-rate="${v}" aria-pressed="${ui.rate===v}">${v===1?"1×":String(v).replace("0.",".")+"×"}</button>`).join("")}</div></div>
+    <div class="pgrp"><button class="pt" id="loopTog" aria-pressed="${L.on}" title="Repeat a stretch of eights">⟲ Loop</button><span class="plbl">eights</span><input type="number" id="loopA" min="1" value="${L.a}" aria-label="Loop from eight"><span class="plbl">to</span><input type="number" id="loopB" min="1" value="${L.b}" aria-label="Loop to eight"></div>
+    ${canSpeak?`<div class="pgrp"><span class="plbl">Counts</span><div class="seg dk">${[["off","Off"],["in","Count-in"],["all","Every count"]].map(([k,n])=>`<button data-counts="${k}" aria-pressed="${ui.counts===k}">${n}</button>`).join("")}</div></div>`:""}
+    <div class="pgrp"><span class="plbl">View</span><button class="pt" id="flipXB" aria-pressed="${ui.flipX}" title="Swap stage left and right, like a studio mirror">⇋ Mirror</button><button class="pt" id="flipYB" aria-pressed="${ui.flipY}" title="Turn the stage front to back">⇅ Flip</button></div>
+    <div class="pgrp"><button class="pt" id="vidB" aria-pressed="${!!vidUrl}">${vidUrl?"Practice video ✓":"＋ Practice video"}</button></div>`;
+  $$("[data-rate]",el).forEach(b=>b.onclick=()=>setRate(+b.dataset.rate));
+  $("#loopTog",el).onclick=toggleLoop;
+  const la=$("#loopA",el),lb=$("#loopB",el);const lc=()=>{ui.loop.a=Math.max(1,Math.round(+la.value)||1);ui.loop.b=Math.max(ui.loop.a,Math.round(+lb.value)||ui.loop.a);la.value=ui.loop.a;lb.value=ui.loop.b;renderTimeline()};la.onchange=lc;lb.onchange=lc;
+  $$("[data-counts]",el).forEach(b=>b.onclick=()=>{ui.counts=b.dataset.counts;renderPractice();if(ui.counts!=="off")say(ui.counts==="in"?"5, 6, 7, 8":"1",1.6)});
+  $("#flipXB",el).onclick=()=>setFlip("x");$("#flipYB",el).onclick=()=>setFlip("y");
+  $("#vidB",el).onclick=()=>{if(vidUrl){$("#vidCard")?.scrollIntoView({behavior:"smooth",block:"nearest"})}else pickVideo()}}
+/* ---------------- practice video, synced to the formations ---------------- */
+let vidFor=null,vidUrl=null;
+const vidIn=document.createElement("input");vidIn.type="file";vidIn.accept="video/*";vidIn.hidden=true;document.body.appendChild(vidIn);
+function pickVideo(){vidIn.value="";vidIn.click()}
+vidIn.addEventListener("change",async()=>{const file=vidIn.files[0];const r=R();if(!file||!r)return;stop();await idb.put(r.id+":video",file);vidFor=null;await loadVidFor(r);
+  toast("Practice video added. Pause it on count 1 and press “Count 1 is here” to line it up.");renderPractice();$("#vidCard")?.scrollIntoView({behavior:"smooth",block:"nearest"})});
+async function loadVidFor(r){if(!r||vidFor===r.id)return;vidFor=r.id;if(vidUrl){URL.revokeObjectURL(vidUrl);vidUrl=null}const blob=await idb.get(r.id+":video");if(vidFor!==r.id)return;if(blob)vidUrl=URL.createObjectURL(blob);renderVidCard();renderPractice()}
+function renderVidCard(){const c=$("#vidCard");const r=R();if(!c||!r)return;if(!vidUrl){c.hidden=true;c.innerHTML="";return}c.hidden=false;
+  const v0=$("#pv",c);if(!v0||v0.dataset.u!==vidUrl){c.innerHTML=`<div class="vidhead"><span class="lbl">Practice video</span><span class="hint">Plays along with the formations, at the same speed. Saved on this device only.</span><div class="spacer"></div><button class="btn sm ghost danger" id="pvX">Remove</button></div>
+    <video id="pv" data-u="${vidUrl}" src="${vidUrl}" muted playsinline controls preload="auto"></video>
+    <div class="row"><button class="btn sm" id="pvSync" title="Pause the video exactly on count 1, then press">Count 1 is here in the video</button><span class="hint mono" id="pvOff"></span></div>`;
+    $("#pvX",c).onclick=async()=>{stop();await idb.put(r.id+":video",null);vidFor=null;if(vidUrl){URL.revokeObjectURL(vidUrl);vidUrl=null}renderVidCard();renderPractice()};
+    $("#pvSync",c).onclick=()=>{const v=$("#pv");r.vidShift=+(r.offset-v.currentTime).toFixed(2);saveRoutine(r);updateVidOff();toast("Practice video lined up with count 1")}}
+  updateVidOff()}
+function updateVidOff(){const r=R(),el=$("#pvOff");if(el&&r){const t=r.offset-(r.vidShift||0);el.textContent=`Count 1 is at ${fmtTime(t)}.${String(Math.floor((Math.abs(t)%1)*10))} in the video`}}
+function syncVideo(force){const v=$("#pv"),r=R();if(!v||!vidUrl||!r)return;const t=beatToSec(r,ui.beat)-(r.vidShift||0);
+  if(ui.playing&&!ui.counting){try{v.playbackRate=ui.rate}catch(e){}if(t<0||(v.duration&&t>v.duration)){if(!v.paused)v.pause();return}if(force||Math.abs(v.currentTime-t)>.25)try{v.currentTime=t}catch(e){}if(v.paused)v.play().catch(()=>{})}
+  else{if(!v.paused)v.pause();if(force)try{v.currentTime=Math.max(0,t)}catch(e){}}}
+function pauseVideo(){const v=$("#pv");if(v&&!v.paused)v.pause()}
 
 $("#songFile").addEventListener("change",async e=>{const file=e.target.files[0];e.target.value="";if(!file)return;const r=R();if(!r)return;stop();
   await idb.put(r.id,file);songFor=null;await loadSongFor(r);const au=$("#au");
   au.onloadedmetadata=()=>{if(canWrite){r.songName=file.name;r.songDur=Math.round(au.duration||0);saveRoutine(r)}renderTransport();renderInspector()};
   toast(`Loaded ${file.name}`);renderTransport()});
 
+
+/* ---------------- song sections (Intro, Verse, Chorus…) ---------------- */
+const SEC_COLORS=["#8b6cff","#e0457b","#19a974","#f29a1f","#2f7de1","#00a9b5"];
+function sectionsOf(r){return (r.sections||[]).slice().sort((a,b)=>a.eight-b.eight)}
+function sectionRange(r,sec){const S=sectionsOf(r);const i=S.findIndex(x=>x.id===sec.id);const last=Math.max(sec.eight,Math.ceil(totalBeats(r)/8));return{a:sec.eight,b:S[i+1]?Math.max(sec.eight,S[i+1].eight-1):last}}
+function sectionAt(r,beat){const e=Math.floor(Math.max(0,beat)/8)+1;let cur=null;sectionsOf(r).forEach(x=>{if(x.eight<=e)cur=x});return cur}
+function addSectionHere(){const r=R();if(!r)return;const e=Math.floor(ui.beat/8)+1;const ex=(r.sections||[]).find(x=>x.eight===e);
+  promptBox(ex?"Rename this section":`Name the section that starts on eight ${e}`,ex?ex.name:["Intro","Verse","Chorus","Bridge","Dhol break","Outro"][(r.sections||[]).length%6],"Save",v=>{pushUndo();r.sections=r.sections||[];if(ex)ex.name=v.slice(0,30);else r.sections.push({id:uid(),name:v.slice(0,30),eight:e});saveRoutine(r);renderTimeline();renderInspector()})}
+function sectionsSection(r){const S=sectionsOf(r);return `<div class="sec"><span class="lbl">Song sections</span>
+  ${S.length?S.map((x,k)=>{const g=sectionRange(r,x);return `<div class="secrow"><span class="sw" style="background:${SEC_COLORS[k%SEC_COLORS.length]}"></span><input type="text" value="${esc(x.name)}" data-secname="${x.id}" aria-label="Section name"><label class="hint">eight <input type="number" min="1" value="${x.eight}" data-seceight="${x.id}" aria-label="Starts on eight" style="width:56px"></label><button class="btn sm ghost" data-secloop="${x.id}" title="Loop eights ${g.a}–${g.b}">⟲</button><button class="btn sm ghost danger" data-secdel="${x.id}" aria-label="Delete ${esc(x.name)}">✕</button></div>`}).join(""):`<p class="hint">Label parts of the song so everyone talks about the same eight: Intro, Verse, Chorus, Dhol break.</p>`}
+  <button class="btn sm" id="iSecAdd" style="align-self:start">＋ Section at eight ${Math.floor(ui.beat/8)+1}</button></div>`}
+function bindSections(el,r){const fs=id=>(r.sections||[]).find(x=>x.id===id);
+  $$("[data-secname]",el).forEach(i=>i.onchange=()=>{const x=fs(i.dataset.secname);if(!x)return;pushUndo();x.name=i.value.trim().slice(0,30)||x.name;saveRoutine(r);renderTimeline()});
+  $$("[data-seceight]",el).forEach(i=>i.onchange=()=>{const x=fs(i.dataset.seceight);if(!x)return;pushUndo();x.eight=Math.max(1,Math.round(+i.value)||1);saveRoutine(r);renderTimeline();renderInspector()});
+  $$("[data-secloop]",el).forEach(b=>b.onclick=()=>{const x=fs(b.dataset.secloop);if(!x)return;const g=sectionRange(r,x);ui.loop={on:true,a:g.a,b:g.b};stop();ui.beat=(g.a-1)*8;renderPractice();renderTimeline();drawFrame();toast(`Looping ${x.name} (eights ${g.a}–${g.b}). Press play.`)});
+  $$("[data-secdel]",el).forEach(b=>b.onclick=()=>{pushUndo();r.sections=(r.sections||[]).filter(x=>x.id!==b.dataset.secdel);saveRoutine(r);renderTimeline();renderInspector()});
+  const ad=$("#iSecAdd",el);if(ad)ad.onclick=addSectionHere}
+
 /* ----- timeline ----- */
 const PX=11;
 function renderTimeline(){const r=R();const t=$("#timeline");if(!t||!r)return;const tot=totalBeats(r);const s=starts(r);
   const songBeats=r.songDur?Math.max(0,secToBeat(r,r.songDur)):0;const width=Math.max(tot*PX+70,songBeats*PX+4);
   let ruler="";for(let b=0;b<=Math.max(tot,songBeats);b+=8)ruler+=`<span style="left:${b*PX}px">${b/8+1}</span>`;
-  t.innerHTML=`<div class="tlhead"><span class="lbl">Timeline · 8-counts</span><span class="hint mono">${r.formations.length} formations · ${Math.ceil(tot/8)} eights · ${fmtTime(beatToSec(r,tot)-r.offset)}</span><div class="spacer"></div>
-    <span class="hint">Solid = hold, striped = transition</span></div>
+  const S=sectionsOf(r);const lane=S.length?`<div class="seclane">${S.map((x,k)=>{const g=sectionRange(r,x);return `<button class="secband" data-sec="${x.id}" style="left:${(g.a-1)*8*PX}px;width:${(g.b-g.a+1)*8*PX-2}px;--c:${SEC_COLORS[k%SEC_COLORS.length]}" title="${esc(x.name)} · eights ${g.a}–${g.b}">${esc(x.name)}</button>`}).join("")}</div>`:"";
+  const[lo,hi]=loopRange(r);const band=ui.loop.on?`<div class="loopband" style="left:${lo*PX}px;width:${(hi-lo)*PX}px" title="Looping eights ${ui.loop.a}–${ui.loop.b}"></div>`:"";
+  const Wn=ui.warn?r.formations.map((f,i)=>[warnPairs(r,i).length,crossPairs(r,i).length]):[];
+  t.innerHTML=`<div class="tlhead"><span class="lbl">Timeline · 8-counts</span><span class="hint mono">${r.formations.length} formations · ${Math.ceil(tot/8)} eights · ${fmtTime(beatToSec(r,tot)-r.offset)}</span><button class="btn sm w" id="addSec">＋ Section</button><div class="spacer"></div>
+    <span class="hint">Solid = hold, striped = transition${ui.warn?" · ⚠ too close · red = paths bump":""}</span></div>
     <div class="tlscroll" id="tlScroll"><div class="tlinner" style="width:${width}px">
-      <div class="ruler" id="ruler">${ruler}</div>
-      <div class="blocks">${r.formations.map((f,i)=>{const last=i===r.formations.length-1;return `<div class="blk ${i===ui.f?"cur":""}" data-i="${i}" title="${esc(f.name)}" style="left:${s[i]*PX}px;width:${(f.hold+(last?0:f.trans))*PX-2}px"><div class="h" style="width:${f.hold*PX}px"><b>${esc(f.name)}${f.notes?`<span class="nt" title="Has notes"></span>`:""}</b><small>${f.hold}${!last&&f.trans?" + "+f.trans:""}</small></div>${!last&&f.trans?`<div class="t" style="width:${f.trans*PX}px"></div>`:""}</div>`}).join("")}
+      ${lane}<div class="ruler" id="ruler">${band}${ruler}</div>
+      <div class="blocks">${r.formations.map((f,i)=>{const last=i===r.formations.length-1;const w=Wn[i]||[0,0];return `<div class="blk ${i===ui.f?"cur":""}" data-i="${i}" title="${esc(f.name)}" style="left:${s[i]*PX}px;width:${(f.hold+(last?0:f.trans))*PX-2}px"><div class="h" style="width:${f.hold*PX}px"><b>${esc(f.name)}${f.notes?`<span class="nt" title="Has notes"></span>`:""}</b><small>${f.hold}${!last&&f.trans?" + "+f.trans:""}${w[0]?` <span class="wb" title="${w[0]} pair${w[0]>1?"s":""} closer than ${gapOf(r)} ft">⚠${w[0]}</span>`:""}</small></div>${!last&&f.trans?`<div class="t${w[1]?" bad":""}" style="width:${f.trans*PX}px" ${w[1]?`title="${w[1]} pair${w[1]>1?"s":""} bump on the way to the next formation"`:""}></div>`:""}</div>`}).join("")}
       <button class="addblk w" id="addF" title="Add formation" aria-label="Add formation" style="left:${tot*PX+4}px">+</button></div>
       <div class="playhead" id="playhead"></div></div></div>`;
   $$(".blk",t).forEach(b=>b.onclick=()=>{stop();seekFormation(+b.dataset.i);ui.sel.clear();drawFrame();renderInspector();renderTimeline()});
-  $("#ruler",t).onclick=e=>{stop();const rect=e.currentTarget.getBoundingClientRect();ui.beat=clamp((e.clientX-rect.left)/PX,0,tot);const au=$("#au");if(hasSong())try{au.currentTime=Math.max(0,beatToSec(r,ui.beat))}catch(_){} drawFrame();renderInspector();renderTimeline()};
-  const a=$("#addF",t);if(a)a.onclick=addFormation;movePlayhead(r,ui.beat)}
+  $$(".secband",t).forEach(b=>b.onclick=()=>{const x=(r.sections||[]).find(q=>q.id===b.dataset.sec);if(!x)return;const g=sectionRange(r,x);stop();ui.beat=Math.min((g.a-1)*8,tot);if(ui.loop.on){ui.loop.a=g.a;ui.loop.b=g.b;renderPractice()}
+    const au=$("#au");if(hasSong())try{au.currentTime=Math.max(0,beatToSec(r,ui.beat))}catch(_){}syncVideo(true);drawFrame();renderInspector();renderTimeline()});
+  $("#ruler",t).onclick=e=>{stop();const rect=e.currentTarget.getBoundingClientRect();ui.beat=clamp((e.clientX-rect.left)/PX,0,tot);const au=$("#au");if(hasSong())try{au.currentTime=Math.max(0,beatToSec(r,ui.beat))}catch(_){} syncVideo(true);drawFrame();renderInspector();renderTimeline()};
+  const a=$("#addF",t);if(a)a.onclick=addFormation;const as=$("#addSec",t);if(as)as.onclick=addSectionHere;movePlayhead(r,ui.beat)}
 function movePlayhead(r,beat){const p=$("#playhead");if(!p)return;p.style.left=(beat*PX)+"px";
   if(ui.playing){const sc=$("#tlScroll");const x=beat*PX;if(x>sc.scrollLeft+sc.clientWidth-60||x<sc.scrollLeft)sc.scrollLeft=x-60}
   $$(".blk").forEach(b=>b.classList.toggle("cur",+b.dataset.i===locate(r,beat).i))}
 function addFormation(){const r=R();pushUndo();const cur=r.formations[ui.f];const f={id:uid(),name:`Formation ${r.formations.length+1}`,hold:8,trans:8,notes:"",pos:clone(cur.pos),moves:{}};
   r.formations.splice(ui.f+1,0,f);seekFormation(ui.f+1);saveRoutine(r);renderTimeline();drawFrame();renderInspector();toast("Formation added. Drag dancers to their new spots.")}
+
+
+/* ----- spacing check panel ----- */
+function warnSection(r,f){const g=gapOf(r);const close=ui.warn?warnPairs(r,ui.f):[],cross=ui.warn?crossPairs(r,ui.f):[];const nm=id=>esc(dancer(id)?.name||"?");const next=r.formations[ui.f+1];
+  return `<div class="sec"><span class="lbl">Spacing check</span>
+    <div class="row"><label class="row hint"><input type="checkbox" id="iWarn" ${ui.warn?"checked":""}> Show warnings</label><label class="row hint">Min gap <input type="number" id="iGap" min="1" max="8" step="0.5" value="${g}" style="width:62px" aria-label="Minimum gap in feet"> ft</label></div>
+    ${!ui.warn?"":close.length||cross.length?`<div class="warns">${[...close.map(([a,b,d])=>`<button class="warn" data-pair="${a},${b}">⚠ <b>${nm(a)}</b> and <b>${nm(b)}</b> are ${d.toFixed(1)} ft apart</button>`),...cross.sort((p,q)=>p[2]-q[2]).map(([a,b,d,t])=>`<button class="warn x" data-pair="${a},${b}">✕ <b>${nm(a)}</b> and <b>${nm(b)}</b> pass ${d.toFixed(1)} ft apart on the way to ${esc(next.name)}, around count ${Math.max(1,Math.round(t*f.trans))} of ${f.trans}</button>`)].slice(0,ui.warnAll?99:5).join("")}${close.length+cross.length>5&&!ui.warnAll?`<button class="btn sm ghost" id="iWarnAll" style="align-self:start">Show ${close.length+cross.length-5} more</button>`:""}</div><span class="hint">Tap a warning to select those two. To fix a bump, drag the ◆ on one dancer's path to curve it around.</span>`
+      :`<span class="okline">✓ Everyone is at least ${g} ft apart${next&&f.trans?", and nobody bumps on the way to the next formation":""}.</span>`}</div>`}
+function bindWarn(el,r){const w=$("#iWarn",el);if(w)w.onchange=()=>{ui.warn=w.checked;drawFrame();renderTimeline();renderInspector()};
+  const g=$("#iGap",el);if(g)g.onchange=()=>{pushUndo();r.minGap=clamp(+g.value||2,1,8);saveRoutine(r);g.blur();drawFrame();renderTimeline();renderInspector()};
+  $$("[data-pair]",el).forEach(b=>b.onclick=()=>{ui.sel=new Set(b.dataset.pair.split(","));drawFrame();renderInspector()});const wa=$("#iWarnAll",el);if(wa)wa.onclick=()=>{ui.warnAll=true;renderInspector()}}
+/* ----- props panel ----- */
+function propsSection(r){const P=r.props||[];return `<div class="sec"><span class="lbl">Props</span>
+  ${P.length?P.map(p=>`<div class="clip"><span class="propic" aria-hidden="true">${esc(propIcon(p.kind))}</span><input type="text" value="${esc(p.name)}" data-propname="${p.id}" aria-label="Prop name" style="flex:1;min-width:0"><button class="btn sm ghost danger" data-delprop="${p.id}" aria-label="Remove ${esc(p.name)}">✕</button></div>`).join(""):`<p class="hint">Add chairs, dandiya sticks or a dupatta, then drag them on stage like dancers. Each formation remembers where they are.</p>`}
+  <div class="row" style="flex-wrap:nowrap"><select id="iPropK" style="flex:1;min-width:0" aria-label="Prop type">${PROP_KINDS.map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select><button class="btn sm" id="iPropAdd">Add prop</button></div></div>`}
+function bindProps(el,r){$("#iPropAdd",el).onclick=()=>{const k=$("#iPropK",el).value;const base=(PROP_KINDS.find(x=>x[0]===k)||PROP_KINDS[4])[1];const n=(r.props||[]).filter(p=>p.kind===k).length;pushUndo();r.props=r.props||[];
+    const p={id:uid(),kind:k,name:n?`${base} ${n+1}`:base};r.props.push(p);const spot={x:((r.props.length-1)%5-2)*2.5,y:r.D-3};r.formations.forEach(f=>{f.ppos=f.ppos||{};f.ppos[p.id]={...spot}});saveRoutine(r);drawFrame();renderInspector();toast(`${p.name} added. Drag it where it goes in each formation.`)};
+  $$("[data-propname]",el).forEach(i=>i.onchange=()=>{const p=(r.props||[]).find(x=>x.id===i.dataset.propname);if(!p)return;pushUndo();p.name=i.value.trim().slice(0,24)||p.name;saveRoutine(r);drawFrame()});
+  $$("[data-delprop]",el).forEach(b=>b.onclick=()=>{const id=b.dataset.delprop;pushUndo();r.props=(r.props||[]).filter(x=>x.id!==id);r.formations.forEach(f=>{if(f.ppos)delete f.ppos[id]});saveRoutine(r);drawFrame();renderInspector()})}
+/* ----- stand-in: replace a dancer across the whole routine ----- */
+function openStandIn(){const r=R();if(!r)return;const cast=castOf(r);if(!cast.length)return;const m=document.createElement("div");m.className="modal";
+  m.innerHTML=`<form class="box"><b style="font-size:16px">Stand-in for “${esc(r.title)}”</b><span class="hint" style="font-size:13px">The stand-in takes over every spot, move, motion clip and path in all formations of this routine.</span>
+    <label class="f">Who's out<select id="siA">${cast.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select></label>
+    <label class="f">Who steps in<select id="siB">${team.roster.map(d=>`<option value="${d.id}">${esc(d.name)}${r.cast.includes(d.id)?" · already dancing, they'll trade places":""}</option>`).join("")}</select></label>
+    <div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-x>Cancel</button><button class="btn pri">Replace</button></div></form>`;
+  document.body.appendChild(m);const nb=team.roster.find(d=>!r.cast.includes(d.id));if(nb)$("#siB",m).value=nb.id;
+  m.addEventListener("click",e=>{if(e.target===m||e.target.closest("[data-x]"))m.remove()});
+  $("form",m).addEventListener("submit",e=>{e.preventDefault();const a=$("#siA",m).value,b=$("#siB",m).value;if(a===b){m.remove();return}m.remove();standIn(r,a,b)})}
+function standIn(r,a,b){pushUndo();const both=r.cast.includes(b);r.formations.forEach(f=>{if(!f.pos[a])f.pos[a]=defaultSpot(r,a);if(both&&!f.pos[b])f.pos[b]=defaultSpot(r,b)});
+  r.formations.forEach(f=>{["pos","moves","motion","via"].forEach(k=>{const o=f[k];if(!o)return;const x=o[a],y=o[b];
+    if(both){if(y!==undefined)o[a]=y;else delete o[a];if(x!==undefined)o[b]=x;else delete o[b]}else{if(x!==undefined)o[b]=x;else delete o[b];delete o[a]}})});
+  if(!both)r.cast=r.cast.map(id=>id===a?b:id);stop();ui.sel.clear();saveRoutine(r);buildStage();drawFrame();renderTimeline();renderInspector();
+  const da=dancer(a),db=dancer(b);toast(both?`${da?.name} and ${db?.name} traded places in every formation`:`${db?.name} now dances ${da?.name}'s part · Ctrl+Z to undo`)}
 
 /* ----- inspector ----- */
 function renderInspector(){const el=$("#inspector");const r=R();if(!el||!r)return;if(el.contains(document.activeElement)&&document.activeElement.matches("input,textarea"))return;
@@ -806,12 +1036,14 @@ function renderInspector(){const el=$("#inspector");const r=R();if(!el||!r)retur
   <div class="sec">
     <span class="lbl">${sel.length?`${sel.length} selected`:"Dancers"}</span>
     ${sel.length?`<div class="chips">${sel.map(d=>`<span class="chip" style="display:inline-flex;gap:6px;align-items:center"><span class="sw" style="background:${d.color}"></span>${esc(d.name)}</span>`).join("")}</div>
-      <div class="row"><button class="btn sm" data-al="row">Line up</button><button class="btn sm" data-al="col">Stack</button><button class="btn sm" data-al="spread">Even spacing</button><button class="btn sm" data-al="mirror">Mirror</button><button class="btn sm" data-al="center">Center</button></div>
+      <div class="row"><button class="btn sm" data-al="row">Line up</button><button class="btn sm" data-al="col">Stack</button><button class="btn sm" data-al="spread">Even spacing</button><button class="btn sm" data-al="mirror" title="Swap stage left and right across the centre line">Mirror ↔</button><button class="btn sm" data-al="flipy" title="Turn the group front to back">Flip ↕</button><button class="btn sm" data-al="center">Center</button><button class="btn sm" data-al="wings" title="Move off stage into the nearest wing">To wings</button></div>
       <label class="f">Move from the library<select id="iMove"><option value="">Choose a move…</option>${MOVES.map(m=>`<option>${m}</option>`).join("")}<option value="__custom">Custom…</option><option value="__clear">Clear move</option></select></label>
       <label class="f">3D motion clip<select id="iClip"><option value="">Choose a clip…</option>${Object.values(motions).sort((a,b)=>a.created-b.created).map(c=>`<option value="${c.id}">${esc(c.name)} · ${c.dur.toFixed(1)}s</option>`).join("")}<option value="__none">Stop motion here</option></select></label>`
     :`<p class="hint">Click a dancer to select. Shift-click or drag a box to select several. Arrow keys nudge by half a foot.</p>`}
-    <div class="row"><span class="hint">Select by color:</span>${[...new Set(castOf(r).map(d=>d.color))].map(c=>`<button class="sw" style="background:${c};border:0;width:18px;height:18px" data-col="${c}" aria-label="Select dancers in this color"></button>`).join("")}<button class="btn sm ghost" id="iAll">All</button></div>
+    <div class="row"><span class="hint">Select by color:</span>${[...new Set(castOf(r).map(d=>d.color))].map(c=>`<button class="sw" style="background:${c};border:0;width:18px;height:18px" data-col="${c}" aria-label="Select dancers in this color"></button>`).join("")}<button class="btn sm ghost" id="iAll">All</button><button class="btn sm ghost w" id="iStand" title="Replace one dancer with another across the whole routine">Stand-in…</button></div>
+    ${sel.length&&r.formations[ui.f+1]&&f.trans?`<span class="hint">Drag the ◆ on a selected dancer's path to curve how they travel to the next formation. Double-click it to straighten.</span>`:""}
   </div>
+  ${warnSection(r,f)}
   ${spacingSection(r,f,sel)}
   <div class="sec">
     <span class="lbl">Templates</span>
@@ -824,6 +1056,8 @@ function renderInspector(){const el=$("#inspector");const r=R();if(!el||!r)retur
     ${Object.keys(motions).length?`<div>${Object.values(motions).sort((a,b)=>a.created-b.created).map(c=>{const used=castOf(r).filter(d=>(f.motion||{})[d.id]===c.id).length;return `<div class="clip"><b title="${esc(c.name)}">${esc(c.name)}</b><span class="hint mono">${c.dur.toFixed(1)}s${used?" · "+used+" here":""}</span><button class="btn sm ghost danger" data-delclip="${c.id}" aria-label="Delete ${esc(c.name)}">✕</button></div>`}).join("")}</div>`:`<p class="hint">Record someone doing the choreography and 8Count turns it into 3D motion your whole team can watch on stage.</p>`}
     <button class="btn sm pri" id="iMotion" style="align-self:start">Turn video into motion</button>
   </div>
+  ${propsSection(r)}
+  ${sectionsSection(r)}
   <div class="sec" id="aiSec" ${sampler?"":"hidden"}>
     <span class="lbl">Formation ideas</span>
     <textarea id="iAi" rows="2" placeholder="Describe it: dramatic entrance, captains in front, two lines that open up"></textarea>
@@ -855,7 +1089,7 @@ function bindInspector(el,r,f){const sv=()=>{saveRoutine(r);renderTimeline()};le
   $$("[data-col]",el).forEach(b=>b.onclick=()=>{ui.sel=new Set(castOf(r).filter(d=>d.color===b.dataset.col).map(d=>d.id));drawFrame();renderInspector()});
   $("#iAll",el).onclick=()=>{ui.sel=new Set(r.cast);drawFrame();renderInspector()};
   $("#iShort",el).onchange=e=>ui.shortFront=e.target.checked;
-  bindSpacing(el,r,f);
+  bindSpacing(el,r,f);bindWarn(el,r);bindProps(el,r);bindSections(el,r);const si=$("#iStand",el);if(si)si.onclick=openStandIn;
   $$("[data-tpl]",el).forEach(b=>b.onclick=()=>{const ids=ui.sel.size?[...ui.sel]:r.cast.slice();pushUndo();const pts=template(b.dataset.tpl,ids.length,r.W,r.D);Object.assign(f.pos,assign(r,pts,ids));saveRoutine(r);drawFrame();toast(`${b.dataset.name} applied · Ctrl+Z to undo`)});
   const ai=$("#iAiGo",el);if(ai)ai.onclick=()=>aiIdea($("#iAi",el).value.trim());
   $("#iBpm",el).onchange=e=>{pushUndo();r.bpm=clamp(+e.target.value||100,40,220);sv();drawFrame()};
@@ -867,7 +1101,7 @@ function bindInspector(el,r,f){const sv=()=>{saveRoutine(r);renderTimeline()};le
   $("#iPaths",el).onchange=e=>{ui.showPaths=e.target.checked;drawFrame()};
   $("#iSnap",el).onchange=e=>ui.snap=e.target.checked}
 function templateGallery(r,n){n=Math.max(n,1);const{W,D}=r;
-  return TEMPLATE_GROUPS.map(([title,items])=>`<div class="tcat"><span>${esc(title.replace("{n}",n))}</span><span class="mono">${items.length}</span></div>
+  return TEMPLATE_GROUPS.map(([title,items])=>`<div class="tcat"><span>${esc(title.replace("{n}",n).replace("{s}",n===1?"":"s"))}</span><span class="mono">${items.length}</span></div>
     <div class="tgrid">${items.map(([k,name])=>`<button class="tcard" data-tpl="${k}" data-name="${esc(name)}" title="${esc(name)}"><svg viewBox="${-W/2} 0 ${W} ${D}" aria-hidden="true"><rect x="${-W/2}" y="0" width="${W}" height="${D}" rx="1.2" class="tfl"/>${template(k,n,W,D).map(p=>`<circle cx="${p.x}" cy="${D-p.y}" r="${n>14?.55:.75}" class="tdot"/>`).join("")}</svg><span>${esc(name)}</span></button>`).join("")}</div>`).join("")}
 function moveF(d){const r=R();const j=ui.f+d;if(j<0||j>=r.formations.length)return;pushUndo();const a=r.formations;[a[ui.f],a[j]]=[a[j],a[ui.f]];seekFormation(j);saveRoutine(r);renderTimeline();drawFrame();renderInspector()}
 function align(kind){const r=R();const f=r.formations[ui.f];const ids=[...ui.sel];if(!ids.length)return;pushUndo();const P=ids.map(id=>({id,...posIn(r,f,id)}));
@@ -877,6 +1111,8 @@ function align(kind){const r=R();const f=r.formations[ui.f];const ids=[...ui.sel
   if(kind==="spread"){const horiz=(Math.max(...P.map(p=>p.x))-Math.min(...P.map(p=>p.x)))>=(Math.max(...P.map(p=>p.y))-Math.min(...P.map(p=>p.y)));const k1=horiz?"x":"y";P.sort((a,b)=>a[k1]-b[k1]);const lo=P[0][k1],hi=P[P.length-1][k1];P.forEach((p,k)=>{const v=P.length>1?lo+(hi-lo)*k/(P.length-1):lo;f.pos[p.id]={...posIn(r,f,p.id),[k1]:+v.toFixed(1)}})}
   if(kind==="mirror"){P.forEach(p=>f.pos[p.id]={x:+(-p.x).toFixed(1),y:p.y})}
   if(kind==="center"){const dx=avg("x");P.forEach(p=>f.pos[p.id]={x:+(p.x-dx).toFixed(1),y:p.y})}
+  if(kind==="flipy"){const cy=avg("y");P.forEach(p=>f.pos[p.id]={x:p.x,y:+clamp(2*cy-p.y,.5,r.D-.5).toFixed(1)})}
+  if(kind==="wings"){[[P.filter(p=>p.x<0),-1],[P.filter(p=>p.x>=0),1]].forEach(([g,sd])=>{g.sort((a,b)=>a.y-b.y);g.forEach((p,k)=>f.pos[p.id]={x:sd*(r.W/2+WING/2),y:+clamp(2+k*2.2,.5,r.D-.5).toFixed(1)})})}
   saveRoutine(r);drawFrame()}
 
 async function aiIdea(desc){const r=R();const msg=$("#iAiMsg");if(!sampler)return;const f=r.formations[ui.f];const cast=castOf(r);if(!cast.length)return;
@@ -896,7 +1132,7 @@ function renderSpotPanel(el,r){const cast=castOf(r);const me=cast.find(d=>d.id==
   el.innerHTML=`<div class="sec"><span class="lbl">My spot</span>
     <select id="spSel" aria-label="Who are you?"><option value="">Who are you?</option>${cast.map(d=>`<option value="${d.id}" ${d.id===ui.spot?"selected":""}>${esc(d.name)}</option>`).join("")}</select>
     ${me?`<p class="hint">You're highlighted in white. Lines show where you came from and where you go next.</p>`:`<p class="hint">Pick your name to see your position on every count.</p>`}</div>
-  ${me?`<div class="sec"><span class="lbl">Your cue sheet</span>${r.formations.map((f,i)=>{const p=posIn(r,f,me.id);const e=eightLabel(s[i]);return `<div class="cue ${i===ui.f?"cur":""}" data-i="${i}"><span class="n">${e.eight}·${e.count}</span><b>${esc(f.name)}</b><span class="p">${esc(describePos(r,p))}</span><span class="m">${f.moves[me.id]?"Move: "+esc(f.moves[me.id])+" · ":""}${f.hold} counts${f.notes?" · "+esc(f.notes):""}</span></div>`}).join("")}</div>`:""}`;
+  ${me?`<div class="sec"><span class="lbl">Your cue sheet</span>${r.formations.map((f,i)=>{const p=posIn(r,f,me.id);const e=eightLabel(s[i]);const sc=sectionAt(r,s[i]);return `<div class="cue ${i===ui.f?"cur":""}" data-i="${i}"><span class="n">${e.eight}·${e.count}</span><b>${sc?`<span class="cuesec">${esc(sc.name)}</span> `:""}${esc(f.name)}</b><span class="p">${esc(describePos(r,p))}</span><span class="m">${f.moves[me.id]?"Move: "+esc(f.moves[me.id])+" · ":""}${f.hold} counts${f.notes?" · "+esc(f.notes):""}</span></div>`}).join("")}</div>`:""}`;
   $("#spSel",el).onchange=e=>{ui.spot=e.target.value||null;ls.set("8c.spot",ui.spot);drawFrame();renderInspector()};
   $$(".cue",el).forEach(c=>c.onclick=()=>{stop();seekFormation(+c.dataset.i);drawFrame();renderTimeline();renderInspector()})}
 
@@ -943,7 +1179,8 @@ function renderSessions(m){const today=new Date().toISOString().slice(0,10);cons
   const up=ss.filter(s=>s.date>=today),past=ss.filter(s=>s.date<today).reverse();
   const row=s=>{const d=new Date(s.date+"T12:00:00");const rt=routines[s.routine];return `<div class="sess ${s.date<today?"past":""}" data-id="${s.id}"><div class="date"><small>${d.toLocaleDateString(undefined,{month:"short"})}</small><b>${d.getDate()}</b><small>${d.toLocaleDateString(undefined,{weekday:"short"})}</small></div>
     <div style="min-width:0"><b>${esc(s.focus||"Practice")}</b><div class="hint">${esc(s.start||"")}${s.end?"–"+esc(s.end):""}${s.place?" · "+esc(s.place):""}${rt?" · "+esc(rt.title):""}</div></div>
-    <button class="btn sm ghost danger w" data-del>Remove</button></div>`};
+    <div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-att="${s.id}" aria-expanded="${ui.attOpen===s.id}">${(s.present||[]).filter(id=>dancer(id)).length}/${team.roster.length} here</button><button class="btn sm ghost danger w" data-del>Remove</button></div>
+    ${ui.attOpen===s.id?`<div class="att">${team.roster.length?team.roster.map(d=>`<label><input type="checkbox" data-here="${d.id}" ${(s.present||[]).includes(d.id)?"checked":""} ${canWrite?"":"disabled"}><span class="sw" style="background:${d.color}"></span>${esc(d.name)}</label>`).join(""):`<span class="hint">Add dancers on the Team tab first.</span>`}</div>`:""}</div>`};
   m.innerHTML=`<div class="pagehead"><div><h1>Rehearsals</h1><p>Practice schedule for the whole team. Add what you're working on so dancers know which routine to review before they show up.</p></div></div>
   <div class="grid2"><div style="min-width:0">
     <div class="lbl" style="margin-bottom:8px">Coming up</div>
@@ -957,6 +1194,9 @@ function renderSessions(m){const today=new Date().toISOString().slice(0,10);cons
     <label class="f">Focus<input type="text" id="sFocus" placeholder="e.g. Clean chorus transitions"></label>
     <label class="f">Routine<select id="sRout"><option value="">Any</option>${sortedRoutines().map(r=>`<option value="${r.id}">${esc(r.title)}</option>`).join("")}</select></label>
     <button class="btn pri">Add rehearsal</button></form></div>`;
+  $$("[data-att]",m).forEach(b=>b.onclick=()=>{ui.attOpen=ui.attOpen===b.dataset.att?null:b.dataset.att;render()});
+  $$("[data-here]",m).forEach(i=>i.onchange=()=>{const se=team.sessions.find(x=>x.id===i.closest(".sess").dataset.id);if(!se)return;const set=new Set(se.present||[]);i.checked?set.add(i.dataset.here):set.delete(i.dataset.here);se.present=[...set];saveTeam();
+    const b=i.closest(".sess").querySelector("[data-att]");if(b)b.textContent=`${se.present.filter(id=>dancer(id)).length}/${team.roster.length} here`});
   $$(".sess [data-del]",m).forEach(b=>b.onclick=()=>{const id=b.closest(".sess").dataset.id;team.sessions=team.sessions.filter(s=>s.id!==id);saveTeam();render()});
   const f=$("#addS",m);if(f)f.addEventListener("submit",e=>{e.preventDefault();team.sessions.push({id:uid(),date:$("#sDate").value,start:$("#sStart").value,end:$("#sEnd").value,place:$("#sPlace").value.trim(),focus:$("#sFocus").value.trim(),routine:$("#sRout").value});saveTeam();render();toast("Rehearsal added")})}
 
@@ -1064,6 +1304,70 @@ function openMotionStudio(){const r=R();if(!r)return;const f=r.formations[ui.f];
     pushUndo();const rr=R(),ff=rr.formations[ui.f];ff.motion=ff.motion||{};who.forEach(id=>ff.motion[id]=cl.id);saveRoutine(rr);
     stopRef.stop=true;if(url)URL.revokeObjectURL(url);m.remove();ui.view="3d";render();toast(`“${cl.name}” placed on ${who.length} dancer${who.length>1?"s":""}. Press play to watch.`)}}
 
+
+/* ---------------- printable spot sheets ---------------- */
+function printSheets(){const r=R();if(!r)return;stop();const cast=castOf(r);if(!cast.length){toast("Add dancers to this routine first.");return}const st=starts(r);const ww=usesWings(r)?WING:0;
+  const mini=(f,hi)=>{const{W,D}=r;return `<svg viewBox="${-W/2-ww-.6} -.6 ${W+2*ww+1.2} ${D+1.9}" class="pm" aria-hidden="true">${ww?`<rect x="${-W/2-ww}" y="0" width="${ww}" height="${D}" class="pmw"/><rect x="${W/2}" y="0" width="${ww}" height="${D}" class="pmw"/>`:""}<rect x="${-W/2}" y="0" width="${W}" height="${D}" class="pmf"/><line x1="0" y1="0" x2="0" y2="${D}" class="pmc"/>
+    ${(r.props||[]).map(p=>{const q=propIn(r,f,p.id);return `<rect x="${q.x-.9}" y="${D-q.y-.65}" width="1.8" height="1.3" rx=".3" class="pmp"/>`}).join("")}
+    ${cast.map(d=>{const p=posIn(r,f,d.id);const me=hi===d.id;return me?"":`<circle cx="${p.x}" cy="${D-p.y}" r="${hi?.6:.9}" class="pmo"/>${hi?"":`<text x="${p.x}" y="${D-p.y}" class="pmt">${esc(initials(d.name))}</text>`}`}).join("")}
+    ${hi?(()=>{const p=posIn(r,f,hi);return `<circle cx="${p.x}" cy="${D-p.y}" r="1.15" class="pmme"/>`})():""}<text x="0" y="${D+.55}" class="pml">AUDIENCE</text></svg>`};
+  const key=`<p class="pk">${cast.map(d=>`<span><b>${esc(initials(d.name))}</b> ${esc(d.name)}</span>`).join("")}</p>`;
+  const map=`<section class="pp"><h1>${esc(r.title)}: spike tape map</h1><p class="pd">${esc(team.name||"")} · Stage ${r.W} × ${r.D} ft · drawn from the audience (stage right on the left)</p>${key}<div class="pg">${r.formations.map((f,i)=>{const e=eightLabel(st[i]);const sec=sectionAt(r,st[i]);return `<figure>${mini(f,null)}<figcaption><b>${i+1}. ${esc(f.name)}</b> · starts ${e.eight}·${e.count}${sec?" · "+esc(sec.name):""}</figcaption></figure>`}).join("")}</div></section>`;
+  const pages=cast.map(d=>`<section class="pp"><h1>${esc(d.name)}</h1><p class="pd">${esc(r.title)} · ${esc(team.name||"")} · your spot is the big orange dot</p>
+    <table><thead><tr><th>#</th><th>Starts</th><th>Formation</th><th>Where you stand</th><th>Move</th><th>Notes</th></tr></thead><tbody>${r.formations.map((f,i)=>{const e=eightLabel(st[i]);const sec=sectionAt(r,st[i]);return `<tr><td>${i+1}</td><td>${e.eight}·${e.count}${sec?`<br><small>${esc(sec.name)}</small>`:""}</td><td>${esc(f.name)}</td><td>${esc(describePos(r,posIn(r,f,d.id)))}</td><td>${esc(f.moves[d.id]||"")}</td><td>${esc(f.notes||"")}</td></tr>`}).join("")}</tbody></table>
+    <div class="pg sm">${r.formations.map((f,i)=>`<figure>${mini(f,d.id)}<figcaption>${i+1}. ${esc(f.name)}</figcaption></figure>`).join("")}</div></section>`).join("");
+  let el=$("#printArea");if(!el){el=document.createElement("div");el.id="printArea";document.body.appendChild(el)}el.innerHTML=map+pages;
+  setTimeout(()=>{try{window.print()}catch(e){toast("Printing isn't available here.")}},80)}
+/* ---------------- export the routine as a video ---------------- */
+let actx=null,aSrc=null;
+function audioGraph(){if(aSrc)return true;try{const AC=window.AudioContext||window.webkitAudioContext;actx=new AC();aSrc=actx.createMediaElementSource($("#au"));aSrc.connect(actx.destination);return true}catch(e){return false}}
+function renderTopTo(c,w,h,r,beat,L){const ww=usesWings(r)?WING:0;const{W,D}=r;const s=Math.min((w-120)/(W+2*ww),(h-170)/D);const ox=w/2,oy=110+(h-170-D*s)/2;
+  const X=x=>ox+x*s,Y=y=>oy+(D-y)*s;c.fillStyle="#1d1530";c.fillRect(0,0,w,h);
+  if(ww){c.fillStyle="rgba(255,255,255,.04)";c.fillRect(X(-W/2-ww),Y(D),ww*s,D*s);c.fillRect(X(W/2),Y(D),ww*s,D*s)}
+  c.fillStyle="#2e2345";c.fillRect(X(-W/2),Y(D),W*s,D*s);c.strokeStyle="rgba(255,255,255,.07)";c.lineWidth=1;
+  for(let x=-W/2;x<=W/2;x+=2){c.beginPath();c.moveTo(X(x),Y(0));c.lineTo(X(x),Y(D));c.stroke()}for(let y=0;y<=D;y+=2){c.beginPath();c.moveTo(X(-W/2),Y(y));c.lineTo(X(W/2),Y(y));c.stroke()}
+  c.strokeStyle="rgba(242,181,68,.5)";c.setLineDash([6,6]);c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(0),Y(D));c.stroke();c.setLineDash([]);
+  c.textAlign="center";c.textBaseline="middle";
+  (r.props||[]).forEach(p=>{const q=propAt(r,beat,p.id);c.fillStyle="rgba(233,226,246,.18)";c.strokeStyle="rgba(233,226,246,.6)";c.beginPath();c.roundRect?c.roundRect(X(q.x)-.95*s,Y(q.y)-.7*s,1.9*s,1.4*s,.35*s):c.rect(X(q.x)-.95*s,Y(q.y)-.7*s,1.9*s,1.4*s);c.fill();c.stroke();c.fillStyle="rgba(233,226,246,.8)";c.font=`700 ${Math.max(10,.46*s)}px Manrope, system-ui, sans-serif`;c.fillText(p.name,X(q.x),Y(q.y)+1.35*s)});
+  castOf(r).map(d=>({d,p:posAt(r,beat,d.id)})).forEach(({d,p})=>{c.globalAlpha=Math.abs(p.x)>W/2+.05?.5:1;c.fillStyle=d.color;c.beginPath();c.arc(X(p.x),Y(p.y),.95*s,0,Math.PI*2);c.fill();
+    c.fillStyle="#fff";c.font=`800 ${Math.max(10,.62*s)}px Manrope, system-ui, sans-serif`;c.fillText(initials(d.name),X(p.x),Y(p.y)+1);
+    c.fillStyle="#e9e2f6";c.font=`600 ${Math.max(10,.46*s)}px Manrope, system-ui, sans-serif`;c.fillText(shortName(d.name),X(p.x),Y(p.y)-1.4*s);c.globalAlpha=1});
+  c.fillStyle="rgba(233,226,246,.5)";c.font="700 13px Manrope, system-ui, sans-serif";c.fillText("AUDIENCE",w/2,h-24)}
+function drawOverlay(c,w,h,r,beat,L){const f=r.formations[L.i];const e=eightLabel(beat);const sec=sectionAt(r,beat);c.textBaseline="alphabetic";
+  c.fillStyle="rgba(10,6,20,.55)";c.fillRect(0,0,w,86);c.textAlign="left";c.fillStyle="#f2b544";c.font="700 18px Manrope, system-ui, sans-serif";c.fillText((team.name||"8Count").toUpperCase(),32,36);
+  c.fillStyle="#e9e2f6";c.font="800 28px Manrope, system-ui, sans-serif";c.fillText(L.moving?`${f.name} → ${r.formations[L.i+1].name}`:f.name,32,70);
+  c.textAlign="right";c.fillStyle="#f2b544";c.font="700 40px 'JetBrains Mono', ui-monospace, monospace";c.fillText(`${e.eight}·${e.count}`,w-32,62);
+  if(sec){c.fillStyle="rgba(233,226,246,.75)";c.font="700 16px Manrope, system-ui, sans-serif";c.fillText(sec.name,w-32,82)}}
+function openExport(){const r=R();if(!r)return;stop();
+  if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){toast("This browser can't record video. Try Chrome or Safari on a laptop.");return}
+  const secs=Math.round(totalBeats(r)*60/r.bpm)+2;const m=document.createElement("div");m.className="modal";
+  m.innerHTML=`<div class="box" role="dialog" aria-modal="true"><b style="font-size:16px">Export “${esc(r.title)}” as a video</b>
+    <span class="hint" style="font-size:13px">8Count plays the routine once and records it, so this takes about ${fmtTime(secs)}. Keep this tab open and in front while it records.</span>
+    <label class="f">View<select id="exV"><option value="top">Top view, with names</option><option value="3d">3D audience view</option></select></label>
+    <label class="row hint"><input type="checkbox" id="exA" ${hasSong()?"checked":"disabled"}> Include the music${hasSong()?"":" (load the song first)"}</label>
+    <div class="ms-prog"><div id="exBar"></div></div><span class="hint" id="exMsg"></span>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-x>Close</button><button class="btn pri" id="exGo">Start recording</button></div></div>`;
+  document.body.appendChild(m);let job=null;
+  m.addEventListener("click",e=>{if(e.target===m||e.target.closest("[data-x]")){if(job)job.cancel();m.remove()}});
+  $("#exGo",m).onclick=()=>{if(job){job.cancel();return}job=recordRoutine(r,$("#exV",m).value,$("#exA",m).checked,{bar:$("#exBar",m),msg:$("#exMsg",m),btn:$("#exGo",m),done:()=>{job=null}})}}
+function recordRoutine(r,view,withAudio,ui2){const W=1280,H=720;const cv=document.createElement("canvas");cv.width=W;cv.height=H;const c=cv.getContext("2d");const stream=cv.captureStream(30);
+  const au=$("#au");let dest=null;if(withAudio&&hasSong()&&audioGraph()){try{actx.resume();dest=actx.createMediaStreamDestination();aSrc.connect(dest);dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t))}catch(e){dest=null}}
+  const mime=["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find(t=>{try{return MediaRecorder.isTypeSupported(t)}catch(e){return false}})||"";
+  const rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:5000000}:{});const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  const tot=totalBeats(r),endBeat=tot+2;const keep={x:ui.flipX,y:ui.flipY,mode:ui.mode};let cancelled=false,t0=0,rafId=0;
+  const cleanup=()=>{cancelAnimationFrame(rafId);try{au.pause()}catch(e){}if(dest)try{aSrc.disconnect(dest)}catch(e){}ui2.done()};
+  rec.onstop=()=>{cleanup();if(cancelled){ui2.msg.textContent="Recording cancelled.";ui2.btn.textContent="Start recording";return}
+    const type=(mime||"video/webm").split(";")[0];const blob=new Blob(chunks,{type});const ext=type.includes("mp4")?"mp4":"webm";const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${fileSlug(r.title)}.${ext}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
+    ui2.msg.textContent=`Saved ${a.download} (${(blob.size/1048576).toFixed(1)} MB). Send it in your team chat.`;ui2.btn.textContent="Record again";ui2.bar.style.width="100%"};
+  const frame=()=>{const playing=withAudio&&dest&&!au.paused;const beat=playing?secToBeat(r,au.currentTime):(performance.now()-t0)/1000*r.bpm/60;const b=clamp(beat,0,tot);const L=locate(r,b);
+    ui.flipX=false;ui.flipY=false;ui.mode="edit";if(view==="3d"){render3d(c,W,H,r,b,L)}else renderTopTo(c,W,H,r,b,L);drawOverlay(c,W,H,r,b,L);ui.flipX=keep.x;ui.flipY=keep.y;ui.mode=keep.mode;
+    ui2.bar.style.width=Math.min(100,beat/endBeat*100)+"%";ui2.msg.textContent=`Recording… ${fmtTime(beat*60/r.bpm)} of ${fmtTime(endBeat*60/r.bpm)}`;
+    if(beat>=endBeat||(playing===false&&dest&&au.ended)){rec.stop();return}rafId=requestAnimationFrame(frame)};
+  ui2.btn.textContent="Cancel";ui2.msg.textContent="Starting…";ui2.bar.style.width="0";
+  const begin=()=>{t0=performance.now();rec.start(500);rafId=requestAnimationFrame(frame)};
+  if(dest){try{au.currentTime=Math.max(0,beatToSec(r,0));au.playbackRate=1}catch(e){}au.play().then(begin).catch(()=>{dest=null;begin()})}else begin();
+  return{cancel:()=>{cancelled=true;try{rec.state!=="inactive"?rec.stop():cleanup()}catch(e){cleanup()}}}}
+
 /* ---------------- iPhone prototype ---------------- */
 const PICON={spot:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
   cues:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>',
@@ -1087,14 +1391,15 @@ function renderPhone(){const m=$("#main");const list=sortedRoutines();if(!routin
   const rs=$("#pRout",m);if(rs)rs.onchange=e=>{stop();ui.rid=e.target.value;ls.set("8c.rid",ui.rid);ui.f=0;ui.beat=0;render()};
   $$("[data-song]",m).forEach(b=>b.onclick=()=>$("#songFile").click());
   $$(".cue",m).forEach(c=>c.onclick=()=>{stop();seekFormation(+c.dataset.i);ui.ptab="spot";render()});
-  if(r&&ui.ptab==="spot"){loadSongFor(r);$("#pPrev").onclick=()=>step(-1);$("#pNext").onclick=()=>step(1);$("#pPlay").onclick=toggle;buildStage();drawFrame();phoneControls()}}
+  if(r&&ui.ptab==="spot"){loadSongFor(r);$("#pPrev").onclick=()=>step(-1);$("#pNext").onclick=()=>step(1);$("#pPlay").onclick=toggle;$$("[data-prate]",m).forEach(b=>b.onclick=()=>setRate(+b.dataset.prate));$("#pFlipX",m).onclick=()=>setFlip("x");$("#pFlipY",m).onclick=()=>setFlip("y");buildStage();drawFrame();phoneControls()}}
 function whoPicker(r,label){return `<select id="pWho" aria-label="Who are you?"><option value="">${label}</option>${castOf(r).map(d=>`<option value="${d.id}" ${d.id===ui.spot?"selected":""}>${esc(d.name)}</option>`).join("")}</select>`}
 function phoneSpot(r){const me=castOf(r).find(d=>d.id===ui.spot);
   return `${me?"":`<div class="p-card"><b>Who are you?</b><span class="hint">Pick your name and your spot lights up on every count.</span>${whoPicker(r,"Choose your name")}</div>`}
   <div class="p-stage"><div><div class="fname" id="fName"></div><div class="fcount" id="fCount"></div></div>
     <svg id="stageSvg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="p-ctl"><div class="counter"><span class="big" id="cEight">1·1</span><div class="dots" id="cDots">${"<span></span>".repeat(8)}</div><span class="sm" id="cTime"></span></div>
-    <div class="p-btns"><button id="pPrev" aria-label="Previous formation">◀︎</button><button class="pri" id="pPlay" aria-label="Play">▶︎</button><button id="pNext" aria-label="Next formation">▶︎</button></div></div></div>
+    <div class="p-btns"><button id="pPrev" aria-label="Previous formation">◀︎</button><button class="pri" id="pPlay" aria-label="Play">▶︎</button><button id="pNext" aria-label="Next formation">▶︎</button></div>
+    <div class="p-prac"><div class="seg dk">${[1,.75,.5].map(v=>`<button data-prate="${v}" aria-pressed="${ui.rate===v}">${v===1?"1×":String(v).replace("0.",".")+"×"}</button>`).join("")}</div><button class="pt" id="pFlipX" aria-pressed="${ui.flipX}">⇋ Mirror</button><button class="pt" id="pFlipY" aria-pressed="${ui.flipY}">⇅ Flip</button></div></div></div>
   <div class="p-card" id="pCue"></div>
   ${r.songName&&!hasSong()?`<button class="btn" data-song>Load your copy of “${esc(r.songName)}”</button>`:""}`}
 function phoneControls(){const b=$("#pPlay");if(!b)return;b.textContent=ui.playing?"❚❚":"▶︎";b.setAttribute("aria-label",ui.playing?"Pause":"Play")}
@@ -1106,7 +1411,7 @@ function updatePhoneCue(r,beat,L){const el=$("#pCue");if(!el)return;const me=cas
   el.innerHTML=`<span class="lbl">Your spot now</span><b>${esc(describePos(r,p))}</b>${f.moves[me.id]?`<span>Move: <b style="font-size:13px">${esc(f.moves[me.id])}</b></span>`:""}${f.notes?`<span class="hint">${esc(f.notes)}</span>`:""}${nx?`<span class="hint">Then ${esc(nx.name)} in ${Math.max(0,left)} counts</span>`:`<span class="hint">Final formation</span>`}`}
 function phoneCues(r){const me=castOf(r).find(d=>d.id===ui.spot);const s=starts(r);
   if(!me)return `<div class="p-card"><b>Pick your name for your cue sheet</b>${whoPicker(r,"Choose your name")}</div>`;
-  return `<span class="lbl">${esc(me.name)} · ${r.formations.length} formations</span>`+r.formations.map((f,i)=>{const e=eightLabel(s[i]);return `<div class="cue" data-i="${i}"><span class="n">${e.eight}·${e.count}</span><b>${esc(f.name)}</b><span class="p">${esc(describePos(r,posIn(r,f,me.id)))}</span><span class="m">${f.moves[me.id]?esc(f.moves[me.id])+" · ":""}${f.hold} counts${f.notes?" · "+esc(f.notes):""}</span></div>`}).join("")}
+  return `<span class="lbl">${esc(me.name)} · ${r.formations.length} formations</span>`+r.formations.map((f,i)=>{const e=eightLabel(s[i]);const sc=sectionAt(r,s[i]);return `<div class="cue" data-i="${i}"><span class="n">${e.eight}·${e.count}</span><b>${sc?`<span class="cuesec">${esc(sc.name)}</span> `:""}${esc(f.name)}</b><span class="p">${esc(describePos(r,posIn(r,f,me.id)))}</span><span class="m">${f.moves[me.id]?esc(f.moves[me.id])+" · ":""}${f.hold} counts${f.notes?" · "+esc(f.notes):""}</span></div>`}).join("")}
 function phoneSchedule(){const today=new Date().toISOString().slice(0,10);const up=team.sessions.filter(x=>x.date>=today).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
   if(!up.length)return `<div class="p-empty"><b>No rehearsals scheduled</b><p>New practices show up here as soon as your captain adds them.</p></div>`;
   return `<div class="list">${up.map(x=>{const d=new Date(x.date+"T12:00:00");const rt=routines[x.routine];return `<div class="sess"><div class="date"><small>${d.toLocaleDateString(undefined,{month:"short"})}</small><b>${d.getDate()}</b><small>${d.toLocaleDateString(undefined,{weekday:"short"})}</small></div><div style="min-width:0"><b>${esc(x.focus||"Practice")}</b><div class="hint">${esc(x.start||"")}${x.end?"–"+esc(x.end):""}${x.place?" · "+esc(x.place):""}${rt?" · "+esc(rt.title):""}</div></div></div>`}).join("")}</div>`}
@@ -1177,7 +1482,7 @@ document.addEventListener("keydown",e=>{if(ui.tab!=="stage"||!R())return;const t
   else if((e.key==="s"||e.key==="S")&&!e.metaKey&&!e.ctrlKey&&ui.mode==="edit"&&ui.view==="top"&&canWrite){toggleSwap()}
   else if(e.key==="["){step(-1)}else if(e.key==="]"){step(1)}
   else if(e.key.startsWith("Arrow")&&ui.sel.size&&ui.mode==="edit"&&canWrite){e.preventDefault();const r=R();const f=r.formations[ui.f];const d=.5;pushUndo();
-    ui.sel.forEach(id=>{const p={...posIn(r,f,id)};if(e.key==="ArrowLeft")p.x-=d;if(e.key==="ArrowRight")p.x+=d;if(e.key==="ArrowUp")p.y+=d;if(e.key==="ArrowDown")p.y-=d;f.pos[id]={x:+clamp(p.x,-r.W/2+.5,r.W/2-.5).toFixed(2),y:+clamp(p.y,.5,r.D-.5).toFixed(2)}});saveRoutine(r);drawFrame()}
+    ui.sel.forEach(id=>{const p={...posIn(r,f,id)};const sx=ui.flipX?-1:1,sy=ui.flipY?-1:1;if(e.key==="ArrowLeft")p.x-=d*sx;if(e.key==="ArrowRight")p.x+=d*sx;if(e.key==="ArrowUp")p.y+=d*sy;if(e.key==="ArrowDown")p.y-=d*sy;f.pos[id]={x:+clamp(p.x,XMIN(r),XMAX(r)).toFixed(2),y:+clamp(p.y,.5,r.D-.5).toFixed(2)}});saveRoutine(r);drawFrame()}
   else if(e.key==="Escape"){if(drag&&drag.kind==="move"){drag=null;clearGhost();drawFrame();return}if(ui.swapMode){if(ui.swapFrom)ui.swapFrom=null;else toggleSwap();drawFrame();return}if(ui.collect){finishCollect();return}ui.swapFrom=null;ui.sel.clear();drawFrame();renderInspector()}});
 window.addEventListener("resize",()=>{if(ui.tab==="stage"&&R()&&!ui.phone)drawFrame()});
 const mq=window.matchMedia?.("(prefers-color-scheme: dark)");mq?.addEventListener?.("change",()=>{if(ui.view==="3d")drawFrame()});

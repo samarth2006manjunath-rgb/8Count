@@ -225,6 +225,14 @@ body.phone main{max-width:none;padding-block:16px}
 .clip{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .clip:last-child{border-bottom:0}
 .clip b{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swapbtn{position:absolute;z-index:3;transform:translate(-50%,calc(-100% - 6px));background:var(--stage-mark);border-color:var(--stage-mark);color:#22180a;box-shadow:0 4px 14px rgba(0,0,0,.4);padding:5px 11px}
+.swapbtn:hover{border-color:#fff}
+.swapbar{position:absolute;z-index:3;left:50%;top:64px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(10,6,20,.88);color:var(--stage-ink);border:1px solid var(--stage-mark);border-radius:999px;padding:6px 8px 6px 14px;font-size:13px;font-weight:600;white-space:nowrap;max-width:calc(100% - 24px)}
+.swapbar span{overflow:hidden;text-overflow:ellipsis}
+.swapbar .btn{background:transparent;color:var(--stage-ink);border-color:var(--stage-line-2)}
+.tok:focus,.tok:focus-visible{outline:none}
+.tok.swapsrc .ring{display:block;stroke-dasharray:.35 .22}
+.swapping .tok{cursor:pointer}
 .cue{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:10px;border:1px solid var(--line);border-radius:9px;cursor:pointer}
 .cue.cur{border-color:var(--accent);background:var(--accent-soft)}
 .cue .n{font-family:var(--f-mono);font-size:11px;color:var(--muted);grid-row:span 3}
@@ -333,7 +341,7 @@ const parseHt=s=>{s=String(s).trim();let m=s.match(/^(\d)\s*['’ ]\s*(\d{1,2})?
 let team={name:"",roster:[],sessions:[],items:[]};
 let routines={};
 let motions={};
-const ui={phone:false,ptab:"spot",tab:"stage",rid:ls.get("8c.rid"),f:0,beat:0,sel:new Set(),mode:"edit",view:"top",showPaths:true,snap:true,playing:false,spot:ls.get("8c.spot"),shortFront:true};
+const ui={swapFrom:null,phone:false,ptab:"spot",tab:"stage",rid:ls.get("8c.rid"),f:0,beat:0,sel:new Set(),mode:"edit",view:"top",showPaths:true,snap:true,playing:false,spot:ls.get("8c.spot"),shortFront:true};
 let canWrite=true, backend="loading", db=null, sampler=null;
 const dirty={}, timers={}, inflight={}, again={};
 const undoStack=[];
@@ -475,6 +483,8 @@ function renderStageTab(m){
         </div>
         <svg id="stageSvg" ${ui.view==="3d"?"hidden":""} xmlns="http://www.w3.org/2000/svg"></svg>
         <canvas id="stage3d" ${ui.view==="top"?"hidden":""}></canvas>
+        <button class="btn sm swapbtn" id="swapBtn" hidden aria-label="Swap this dancer with another">⇄ Swap</button>
+        <div class="swapbar" id="swapBar" role="status" hidden><span id="swapMsg"></span><button class="btn sm" id="swapCancel">Cancel</button></div>
         <div class="transport" id="transport"></div>
       </div>
       <div class="timeline" id="timeline"></div>
@@ -531,6 +541,8 @@ function bindStageTab(m){
   $("#rRen",m).onclick=()=>{const r=R();promptBox("Rename routine",r.title,"Save",v=>{pushUndo();r.title=v;saveRoutine(r);render()})};
   $("#rDup",m).onclick=()=>{const r=clone(R());r.id=uid();r.title+=" (copy)";r.created=Date.now();routines[r.id]=r;ui.rid=r.id;saveRoutine(r);render();toast("Routine duplicated")};
   $("#rDel",m).onclick=()=>{const r=R();confirmBox(`Delete “${r.title}”?`,"This removes it from this browser. You can undo right after with Ctrl+Z.","Delete",()=>{pushUndo();stop();delete routines[r.id];persistLocal();queue("r:"+r.id);ui.rid=null;render()})};
+  const sb=$("#swapBtn",m);if(sb)sb.onclick=e=>{e.stopPropagation();const id=[...ui.sel][0];if(!id)return;stop();ui.swapFrom=id;drawFrame()};
+  const sc=$("#swapCancel",m);if(sc)sc.onclick=()=>{ui.swapFrom=null;drawFrame()};
   $$("[data-mode]",m).forEach(b=>b.onclick=()=>{ui.mode=b.dataset.mode;ui.sel.clear();render()});
   $$("[data-view]",m).forEach(b=>b.onclick=()=>{ui.view=b.dataset.view;render()});
 }
@@ -556,7 +568,7 @@ function drawFrame(){const r=R();if(!r)return;const beat=ui.beat;const L=locate(
   const fn=$("#fName"),fc=$("#fCount");
   if(fn){fn.textContent=L.moving?`${cur.name} → ${r.formations[L.i+1].name}`:cur.name;const e=eightLabel(beat);fc.textContent=`Formation ${L.i+1} of ${r.formations.length} · 8-count ${e.eight}, count ${e.count}`}
   if(ui.view==="3d")draw3d(r,beat,L);else drawTop(r,beat,L);
-  updateCounter(r,beat);movePlayhead(r,beat);if(ui.phone)updatePhoneCue(r,beat,L);
+  updateCounter(r,beat);movePlayhead(r,beat);if(ui.phone)updatePhoneCue(r,beat,L);placeSwapUI(r,L);
 }
 function drawTop(r,beat,L){const T=$("#lToks");if(!T)return;const D=r.D;const cur=r.formations[L.i];const spotId=ui.mode==="spot"?ui.spot:null;
   $$(".tok",T).forEach(g=>{const id=g.dataset.id;const p=posAt(r,beat,id);g.setAttribute("transform",`translate(${p.x.toFixed(3)} ${(D-p.y).toFixed(3)})`);
@@ -614,12 +626,29 @@ function drawFigure(c,pr,p,J,k,color){const Wp=J.map(([x,h,d])=>({X:p.x+x*k,Y:p.
   c.save();c.lineCap="round";c.lineJoin="round";items.sort((a,b)=>b.dep-a.dep).forEach(it=>it.go());c.restore();
   return[HP[0],HP[1]-hr]}
 
+
+/* ----- swap two dancers ----- */
+function placeSwapUI(r,L){const btn=$("#swapBtn"),bar=$("#swapBar"),card=$(".stagecard");if(!btn||!bar||!card)return;
+  const ok=ui.mode==="edit"&&canWrite&&ui.view==="top"&&!ui.playing&&!drag&&!L.moving;
+  if(ui.swapFrom&&(!ok||!r.cast.includes(ui.swapFrom)))ui.swapFrom=null;
+  $$(".tok").forEach(g=>g.classList.toggle("swapsrc",g.dataset.id===ui.swapFrom));$("#stageSvg")?.classList.toggle("swapping",!!ui.swapFrom);
+  if(ui.swapFrom){btn.hidden=true;const d=dancer(ui.swapFrom);$("#swapMsg").textContent=`Tap the dancer to swap with ${d?d.name:""}`;bar.hidden=false;return}
+  bar.hidden=true;const id=ui.sel.size===1?[...ui.sel][0]:null;const c=id&&$(`.tok[data-id="${id}"] circle.b`);
+  if(!ok||!c){btn.hidden=true;return}const cr=card.getBoundingClientRect(),tr=c.getBoundingClientRect();
+  btn.style.left=(tr.left+tr.width/2-cr.left)+"px";btn.style.top=(tr.top-cr.top-tr.height*0.55)+"px";btn.hidden=false}
+function swapDancers(a,b){const r=R();const f=r.formations[ui.f];const da=dancer(a),db=dancer(b);pushUndo();
+  const pa={...posIn(r,f,a)},pb={...posIn(r,f,b)};f.pos[a]=pb;f.pos[b]=pa;
+  const sw=o=>{if(!o)return;const x=o[a],y=o[b];if(y!==undefined)o[a]=y;else delete o[a];if(x!==undefined)o[b]=x;else delete o[b]};sw(f.moves);sw(f.motion);
+  ui.swapFrom=null;ui.sel.clear();saveRoutine(r);drawFrame();renderInspector();toast(`Swapped ${da?da.name:"dancers"} and ${db?db.name:""} in “${f.name}” · Ctrl+Z to undo`)}
+
 /* ----- stage interaction ----- */
 let drag=null;
 function svgPt(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();if(!m)return{x:0,y:0};const p=pt.matrixTransform(m.inverse());return{x:p.x,y:R().D-p.y}}
 function bindStage(svg){
   svg.onpointerdown=e=>{if(ui.mode!=="edit"||!canWrite)return;const r=R();stop();const L=locate(r,ui.beat);if(L.moving){seekFormation(L.i);}
-    const tok=e.target.closest(".tok");const p=svgPt(svg,e);
+    const tok=e.target.closest(".tok");
+    if(ui.swapFrom){if(tok&&tok.dataset.id!==ui.swapFrom)swapDancers(ui.swapFrom,tok.dataset.id);else{ui.swapFrom=null;drawFrame()}return}
+    const p=svgPt(svg,e);
     if(tok){const id=tok.dataset.id;if(e.shiftKey||e.metaKey||e.ctrlKey){ui.sel.has(id)?ui.sel.delete(id):ui.sel.add(id)}else if(!ui.sel.has(id)){ui.sel.clear();ui.sel.add(id)}
       const f=r.formations[ui.f];const orig={};ui.sel.forEach(i=>orig[i]={...posIn(r,f,i)});drag={kind:"move",start:p,orig,moved:false}}
     else{if(!(e.shiftKey||e.metaKey||e.ctrlKey))ui.sel.clear();drag={kind:"marq",start:p}}
@@ -1076,8 +1105,8 @@ document.addEventListener("keydown",e=>{if(ui.tab!=="stage"||!R())return;const t
   else if(e.key==="["){step(-1)}else if(e.key==="]"){step(1)}
   else if(e.key.startsWith("Arrow")&&ui.sel.size&&ui.mode==="edit"&&canWrite){e.preventDefault();const r=R();const f=r.formations[ui.f];const d=.5;pushUndo();
     ui.sel.forEach(id=>{const p={...posIn(r,f,id)};if(e.key==="ArrowLeft")p.x-=d;if(e.key==="ArrowRight")p.x+=d;if(e.key==="ArrowUp")p.y+=d;if(e.key==="ArrowDown")p.y-=d;f.pos[id]={x:+clamp(p.x,-r.W/2+.5,r.W/2-.5).toFixed(2),y:+clamp(p.y,.5,r.D-.5).toFixed(2)}});saveRoutine(r);drawFrame()}
-  else if(e.key==="Escape"){ui.sel.clear();drawFrame();renderInspector()}});
-window.addEventListener("resize",()=>{if(ui.tab==="stage"&&ui.view==="3d")drawFrame()});
+  else if(e.key==="Escape"){ui.swapFrom=null;ui.sel.clear();drawFrame();renderInspector()}});
+window.addEventListener("resize",()=>{if(ui.tab==="stage"&&R()&&!ui.phone)drawFrame()});
 const mq=window.matchMedia?.("(prefers-color-scheme: dark)");mq?.addEventListener?.("change",()=>{if(ui.view==="3d")drawFrame()});
 
 /* ---------------- boot ---------------- */

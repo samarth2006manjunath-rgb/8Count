@@ -629,8 +629,11 @@ const FIG_SEGS=[[1,3,.12],[3,5,.1],[2,4,.12],[4,6,.1],[7,9,.17],[9,11,.14],[11,1
 function makeProj(w,h,W,D){const cy=D*0.75,hz=h*0.12;const f=0.94*w*cy/W;const ch=(0.9*h-hz)*cy/f;return(x,y,z)=>{const d=Math.max(.5,y+cy);return[w/2+f*x/d,hz+f*(ch-z)/d,f/d]}}
 function clipFrame(cl,t){const n=cl.n;const fi=clamp(t*cl.fps,0,n-1);const i=Math.floor(fi),u=fi-i,j=Math.min(i+1,n-1);const D=cl.data,out=[];
   for(let k=0;k<15;k++){const a=(i*15+k)*3,b=(j*15+k)*3;out.push([(D[a]+(D[b]-D[a])*u)/1000,(D[a+1]+(D[b+1]-D[a+1])*u)/1000,(D[a+2]+(D[b+2]-D[a+2])*u)/1000])}return out}
-function motionAt(r,L,beat,id){const f=r.formations[L.i];const cid=f.motion&&f.motion[id];const cl=cid&&motions[cid];if(!cl||!cl.data)return null;
-  const t=(beat-starts(r)[L.i])*60/r.bpm;return{joints:clipFrame(cl,Math.max(0,t)),ref:cl.ref||1.5}}
+/* a clip plays from count 1 of the formation it's placed on until it ends, carrying into later formations;
+   a later formation that sets its own clip, or "Stop motion here" (null), takes over */
+function motionAt(r,L,beat,id){const s=starts(r);for(let j=L.i;j>=0;j--){const mo=r.formations[j].motion;if(!mo||!(id in mo))continue;
+  const cid=mo[id];const cl=cid&&motions[cid];if(!cl||!cl.data)return null;const t=Math.max(0,(beat-s[j])*60/r.bpm);
+  if(j<L.i&&t>cl.dur)return null;return{joints:clipFrame(cl,t),ref:cl.ref||1.5}}return null}
 /* draws a capsule-limbed body; joints are [x right, h up, d upstage] in meters, k converts to stage feet */
 function drawFigure(c,pr,p,J,k,color){const Wp=J.map(([x,h,d])=>({X:p.x+x*k,Y:p.y+d*k,Z:h*k}));const P=Wp.map(q=>pr(q.X,q.Y,q.Z));const edge="rgba(12,7,24,.6)";
   const path=pts=>{c.beginPath();pts.forEach((q,n)=>n?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]))};
@@ -805,7 +808,7 @@ function renderInspector(){const el=$("#inspector");const r=R();if(!el||!r)retur
     ${sel.length?`<div class="chips">${sel.map(d=>`<span class="chip" style="display:inline-flex;gap:6px;align-items:center"><span class="sw" style="background:${d.color}"></span>${esc(d.name)}</span>`).join("")}</div>
       <div class="row"><button class="btn sm" data-al="row">Line up</button><button class="btn sm" data-al="col">Stack</button><button class="btn sm" data-al="spread">Even spacing</button><button class="btn sm" data-al="mirror">Mirror</button><button class="btn sm" data-al="center">Center</button></div>
       <label class="f">Move from the library<select id="iMove"><option value="">Choose a move…</option>${MOVES.map(m=>`<option>${m}</option>`).join("")}<option value="__custom">Custom…</option><option value="__clear">Clear move</option></select></label>
-      <label class="f">3D motion clip<select id="iClip"><option value="">Choose a clip…</option>${Object.values(motions).sort((a,b)=>a.created-b.created).map(c=>`<option value="${c.id}">${esc(c.name)} · ${c.dur.toFixed(1)}s</option>`).join("")}<option value="__none">Remove motion</option></select></label>`
+      <label class="f">3D motion clip<select id="iClip"><option value="">Choose a clip…</option>${Object.values(motions).sort((a,b)=>a.created-b.created).map(c=>`<option value="${c.id}">${esc(c.name)} · ${c.dur.toFixed(1)}s</option>`).join("")}<option value="__none">Stop motion here</option></select></label>`
     :`<p class="hint">Click a dancer to select. Shift-click or drag a box to select several. Arrow keys nudge by half a foot.</p>`}
     <div class="row"><span class="hint">Select by color:</span>${[...new Set(castOf(r).map(d=>d.color))].map(c=>`<button class="sw" style="background:${c};border:0;width:18px;height:18px" data-col="${c}" aria-label="Select dancers in this color"></button>`).join("")}<button class="btn sm ghost" id="iAll">All</button></div>
   </div>
@@ -846,7 +849,7 @@ function bindInspector(el,r,f){const sv=()=>{saveRoutine(r);renderTimeline()};le
   $$("[data-al]",el).forEach(b=>b.onclick=()=>align(b.dataset.al));
   const mv=$("#iMove",el);if(mv)mv.onchange=e=>{let v=e.target.value;if(!v)return;const apply=val=>{pushUndo();ui.sel.forEach(id=>{if(val)f.moves[id]=val;else delete f.moves[id]});saveRoutine(r);drawFrame();renderInspector()};
     if(v==="__custom")promptBox("Name the move","","Add",apply);else apply(v==="__clear"?"":v)};
-  const ic=$("#iClip",el);if(ic)ic.onchange=e=>{const v=e.target.value;if(!v)return;pushUndo();f.motion=f.motion||{};ui.sel.forEach(id=>{if(v==="__none")delete f.motion[id];else f.motion[id]=v});saveRoutine(r);if(v!=="__none"&&ui.view!=="3d"){ui.view="3d";render();toast("Showing the 3D audience view. Press play to watch.")}else{drawFrame();renderInspector()}};
+  const ic=$("#iClip",el);if(ic)ic.onchange=e=>{const v=e.target.value;if(!v)return;pushUndo();f.motion=f.motion||{};ui.sel.forEach(id=>{if(v==="__none")f.motion[id]=null;else f.motion[id]=v});saveRoutine(r);if(v!=="__none"&&ui.view!=="3d"){ui.view="3d";render();toast("Showing the 3D audience view. Press play to watch.")}else{drawFrame();renderInspector()}};
   $("#iMotion",el).onclick=openMotionStudio;
   $$("[data-delclip]",el).forEach(b=>b.onclick=()=>{const c=motions[b.dataset.delclip];confirmBox(`Delete “${c.name}”?`,"It will be removed from every formation that uses it.","Delete",()=>{deleteMotion(c.id);drawFrame();renderInspector()})});
   $$("[data-col]",el).forEach(b=>b.onclick=()=>{ui.sel=new Set(castOf(r).filter(d=>d.color===b.dataset.col).map(d=>d.id));drawFrame();renderInspector()});
@@ -1031,7 +1034,7 @@ function openMotionStudio(){const r=R();if(!r)return;const f=r.formations[ui.f];
     <section class="ms-step"><div class="ms-h"><span class="ms-n">3</span><div><b>See it on stage</b><small>Name it and choose who dances it in “${esc(f.name)}”.</small></div></div>
       <label class="f">Motion name<input type="text" id="msName" placeholder="e.g. Hook step" value=""></label>
       <div class="ms-who">${cast.map(d=>`<label><input type="checkbox" value="${d.id}" ${pre.has(d.id)||!pre.size?"checked":""}><span class="sw" style="background:${d.color}"></span>${esc(d.name)}</label>`).join("")||`<span class="hint">Add dancers to this routine first.</span>`}</div>
-      <span class="hint">Starts on count 1 of this formation and plays at real speed.</span>
+      <span class="hint">Starts on count 1 of this formation and plays at real speed until the clip ends, even into the next formations.</span>
       <button class="btn pri" id="msSave" disabled>Save and place on stage</button></section>
    </div></div>`;
   document.body.appendChild(m);let url=null,clip=null,busy=false;const stopRef={stop:false};

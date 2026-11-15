@@ -2,7 +2,7 @@
 
 A free formation planner for dance teams, built for our college Bollywood team.
 
-**Open it:** https://samarth2006manjunath-rgb.github.io/8count/
+**Open it:** https://samarth2006manjunath-rgb.github.io/8Count/
 
 ## What it does
 - Stage editor with a measured grid, 18 formation templates and alignment tools

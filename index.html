@@ -637,6 +637,25 @@ function drawFigure(c,pr,p,J,k,color){const Wp=J.map(([x,h,d])=>({X:p.x+x*k,Y:p.
 
 
 
+
+/* ----- spacing slider: spread dancers out or pull them in, keeping the shape ----- */
+let spaceBase=null;
+function spaceIds(r,sel){return sel.length>1?sel.map(d=>d.id):r.cast.slice()}
+function nnGap(P){if(P.length<2)return 0;let sum=0;P.forEach((a,i)=>{let m=Infinity;P.forEach((b,j)=>{if(i!==j)m=Math.min(m,Math.hypot(a.x-b.x,a.y-b.y))});sum+=m});return sum/P.length}
+function spacingSection(r,f,sel){const ids=spaceIds(r,sel);if(ids.length<2)return "";const g=nnGap(ids.map(id=>posIn(r,f,id)));const max=Math.max(10,Math.ceil(g*2));
+  return `<div class="sec"><span class="lbl">Spacing</span>
+    <div class="row" style="flex-wrap:nowrap"><input type="range" id="iSpace" min="1.5" max="${max}" step="0.1" value="${g.toFixed(1)}" style="flex:1;min-width:0;accent-color:var(--accent)" aria-label="Gap between dancers"><span class="mono" id="iSpaceV" style="min-width:52px;text-align:right">${g.toFixed(1)} ft</span></div>
+    <span class="hint" id="iSpaceH">Average gap to the nearest dancer, for ${sel.length>1?`the ${sel.length} selected dancers`:"everyone"} in this formation.</span></div>`}
+function bindSpacing(el,r,f){const inp=$("#iSpace",el);if(!inp)return;
+  inp.addEventListener("input",()=>{if(!spaceBase){const ids=spaceIds(r,[...ui.sel].map(dancer).filter(Boolean));const P={};ids.forEach(id=>P[id]={...posIn(r,f,id)});const pts=Object.values(P);
+      const c={x:pts.reduce((a,q)=>a+q.x,0)/pts.length,y:pts.reduce((a,q)=>a+q.y,0)/pts.length};let maxS=Infinity;
+      pts.forEach(q=>{const dx=q.x-c.x,dy=q.y-c.y;if(dx>1e-6)maxS=Math.min(maxS,(r.W/2-.5-c.x)/dx);if(dx<-1e-6)maxS=Math.min(maxS,(-r.W/2+.5-c.x)/dx);if(dy>1e-6)maxS=Math.min(maxS,(r.D-.5-c.y)/dy);if(dy<-1e-6)maxS=Math.min(maxS,(.5-c.y)/dy)});
+      pushUndo();spaceBase={P,c,d0:nnGap(pts)||1,maxS}}
+    const B=spaceBase;let k=(+inp.value)/B.d0;const edge=k>B.maxS;k=Math.min(k,B.maxS);
+    for(const id in B.P){const q=B.P[id];f.pos[id]={x:+clamp(B.c.x+(q.x-B.c.x)*k,-r.W/2+.5,r.W/2-.5).toFixed(2),y:+clamp(B.c.y+(q.y-B.c.y)*k,.5,r.D-.5).toFixed(2)}}
+    $("#iSpaceV",el).textContent=(B.d0*k).toFixed(1)+" ft";$("#iSpaceH",el).textContent=edge?"That's as wide as the stage allows.":`Spreading ${Object.keys(B.P).length} dancers around the group's centre.`;drawFrame()});
+  inp.addEventListener("change",()=>{if(!spaceBase)return;spaceBase=null;saveRoutine(r);inp.blur();renderInspector()})}
+
 /* ----- drag preview: a see-through copy follows the pointer ----- */
 function clearGhost(){const g=$("#lGhost");if(g)g.innerHTML="";$("#stageSvg")?.classList.remove("dragging")}
 function drawGhost(r){const g=$("#lGhost");if(!g||!drag||!drag.preview)return;const D=r.D;let h="";const ids=Object.keys(drag.preview);
@@ -781,6 +800,7 @@ function renderInspector(){const el=$("#inspector");const r=R();if(!el||!r)retur
     :`<p class="hint">Click a dancer to select. Shift-click or drag a box to select several. Arrow keys nudge by half a foot.</p>`}
     <div class="row"><span class="hint">Select by color:</span>${[...new Set(castOf(r).map(d=>d.color))].map(c=>`<button class="sw" style="background:${c};border:0;width:18px;height:18px" data-col="${c}" aria-label="Select dancers in this color"></button>`).join("")}<button class="btn sm ghost" id="iAll">All</button></div>
   </div>
+  ${spacingSection(r,f,sel)}
   <div class="sec">
     <span class="lbl">Templates</span>
     <span class="hint">Tap one to arrange ${sel.length?`the ${sel.length} selected dancers`:"everyone"} in this formation.</span>
@@ -823,6 +843,7 @@ function bindInspector(el,r,f){const sv=()=>{saveRoutine(r);renderTimeline()};le
   $$("[data-col]",el).forEach(b=>b.onclick=()=>{ui.sel=new Set(castOf(r).filter(d=>d.color===b.dataset.col).map(d=>d.id));drawFrame();renderInspector()});
   $("#iAll",el).onclick=()=>{ui.sel=new Set(r.cast);drawFrame();renderInspector()};
   $("#iShort",el).onchange=e=>ui.shortFront=e.target.checked;
+  bindSpacing(el,r,f);
   $$("[data-tpl]",el).forEach(b=>b.onclick=()=>{const ids=ui.sel.size?[...ui.sel]:r.cast.slice();pushUndo();const pts=template(b.dataset.tpl,ids.length,r.W,r.D);Object.assign(f.pos,assign(r,pts,ids));saveRoutine(r);drawFrame();toast(`${b.dataset.name} applied · Ctrl+Z to undo`)});
   const ai=$("#iAiGo",el);if(ai)ai.onclick=()=>aiIdea($("#iAi",el).value.trim());
   $("#iBpm",el).onchange=e=>{pushUndo();r.bpm=clamp(+e.target.value||100,40,220);sv();drawFrame()};

@@ -131,6 +131,11 @@ main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px
 .dots span{width:9px;height:9px;border-radius:50%;background:var(--stage-line-2)}
 .dots span.on{background:var(--stage-mark)}
 
+/* realistic 3D view */
+.gl3{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#1d1530}
+.gl3[hidden]{display:none}
+.gl3 canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+.gl3 #gl3ov{pointer-events:none}
 /* cues */
 .cuelane{position:relative;height:22px;margin-top:4px;border-bottom:1px dashed var(--line);cursor:copy}
 .cuechip{position:absolute;top:2px;height:18px;border:0;border-radius:5px;background:var(--ink);color:var(--surface);font:700 11px var(--f-body);padding:0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
@@ -620,6 +625,7 @@ function renderStageTab(m){
         </div>
         <svg id="stageSvg" ${ui.view==="3d"?"hidden":""} xmlns="http://www.w3.org/2000/svg"></svg>
         <canvas id="stage3d" ${ui.view==="top"?"hidden":""}></canvas>
+        <div class="gl3" id="gl3" hidden><canvas id="gl3ov" aria-hidden="true"></canvas></div>
         <div class="seltools" id="selTools" hidden><button class="btn sm" id="collectBtn">+ Collect</button><button class="btn sm" id="clearBtn">Clear</button></div>
         <div class="cuecap" id="cueCap" aria-live="polite" hidden></div>
         <div class="swapbar" id="swapBar" role="status" hidden><span id="swapMsg"></span><button class="btn sm" id="barBtn">Cancel</button></div>
@@ -712,7 +718,7 @@ function drawFrame(){const r=R();if(!r)return;const beat=ui.beat;const L=locate(
   if(!ui.playing)ui.f=L.i;
   const fn=$("#fName"),fc=$("#fCount");
   if(fn){fn.textContent=L.moving?`${cur.name} → ${r.formations[L.i+1].name}`:cur.name;const e=eightLabel(beat);fc.textContent=`Formation ${L.i+1} of ${r.formations.length} · 8-count ${e.eight}, count ${e.count}`}
-  if(ui.view==="3d")draw3d(r,beat,L);else drawTop(r,beat,L);
+  if(ui.view==="3d")draw3dAny(r,beat,L);else drawTop(r,beat,L);
   updateCounter(r,beat);movePlayhead(r,beat);if(ui.phone)updatePhoneCue(r,beat,L);placeSwapUI(r,L);placeCueCap(r,beat);
 }
 function drawTop(r,beat,L){const T=$("#lToks");if(!T)return;const cur=r.formations[L.i];const spotId=ui.mode==="spot"?ui.spot:null;const W2=r.W/2;
@@ -774,7 +780,123 @@ function clipFrame(cl,t){const n=cl.n;const fi=clamp(t*cl.fps,0,n-1);const i=Mat
    a later formation that sets its own clip, or "Stop motion here" (null), takes over */
 function motionAt(r,L,beat,id){const s=starts(r);for(let j=L.i;j>=0;j--){const mo=r.formations[j].motion;if(!mo||!(id in mo))continue;
   const cid=mo[id];const cl=cid&&motions[cid];if(!cl||!cl.data)return null;const t=Math.max(0,(beat-s[j])*60/r.bpm);
-  if(j<L.i&&t>cl.dur)return null;return{joints:clipFrame(cl,t),ref:cl.ref||1.5}}return null}
+  if(j<L.i&&t>cl.dur)return null;return{joints:framesAt(clipFrames(cl),cl.fps,t),ref:cl.ref||1.5}}return null}
+
+/* ---------------- motion clean-up: smooth, keep bone lengths, plant feet ---------------- */
+const cleanMotion=(()=>{
+function gaussSmooth(F,sig){const h=Math.ceil(sig*2.5),w=[];for(let k=-h;k<=h;k++)w.push(Math.exp(-k*k/(2*sig*sig)));
+  return F.map((_,i)=>F[0].map((__,j)=>[0,1,2].map(ax=>{let s=0,ws=0;for(let k=-h;k<=h;k++){const t=i+k;if(t<0||t>=F.length)continue;s+=F[t][j][ax]*w[k+h];ws+=w[k+h]}return s/ws})))}
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s],len=a=>Math.hypot(a[0],a[1],a[2]),nrm=a=>{const l=len(a)||1;return mul(a,1/l)},mid=(a,b)=>mul(add(a,b),.5);
+const median=v=>{const s=v.slice().sort((a,b)=>a-b);return s[Math.floor(s.length/2)]};
+function cleanMotion(F0){const F=gaussSmooth(F0,1.4);
+  const chains=[[1,3],[3,5],[2,4],[4,6],[7,9],[9,11],[8,10],[10,12],[11,13],[12,14]];
+  const L=chains.map(([a,b])=>median(F.map(f=>len(sub(f[b],f[a])))));
+  const symL=L.map((v,i)=>(v+L[i%2===0?i+1:i-1]*1)/2); /* left/right pairs share one length */
+  const shW=median(F.map(f=>len(sub(f[1],f[2])))),hipW=median(F.map(f=>len(sub(f[7],f[8])))),neckToNose=median(F.map(f=>len(sub(f[0],mid(f[1],f[2]))))) ;
+  const out=F.map(f=>{const g=f.map(p=>p.slice());
+    const neck=mid(g[1],g[2]),pel=mid(g[7],g[8]);const sd=nrm(sub(g[1],g[2])),hd=nrm(sub(g[7],g[8]));
+    g[1]=add(neck,mul(sd,shW/2));g[2]=add(neck,mul(sd,-shW/2));g[7]=add(pel,mul(hd,hipW/2));g[8]=add(pel,mul(hd,-hipW/2));
+    g[0]=add(neck,mul(nrm(sub(f[0],neck)),neckToNose));
+    chains.forEach(([a,b],i)=>{g[b]=add(g[a],mul(nrm(sub(f[b],f[a])),symL[i]))});return g});
+  /* keep feet on the floor: lift sunk feet, settle small hovers, allow real jumps */
+  const shift=out.map(g=>{const low=Math.min(g[11][1],g[12][1],g[13][1],g[14][1]);return low<0.09?-low+0.005:0});
+  const sm=shift.map((_,i)=>{let s=0,c=0;for(let k=-2;k<=2;k++){const t=i+k;if(t>=0&&t<shift.length){s+=shift[t];c++}}return s/c});
+  return out.map((g,i)=>g.map(p=>[p[0],p[1]+sm[i],p[2]]))}
+
+return cleanMotion})();
+const cleanCache={};
+function clipFrames(cl){const c=cleanCache[cl.id];if(c&&c.n===cl.n&&c.d===cl.data)return c.F;const raw=[];for(let i=0;i<cl.n;i++){const f=[];for(let k=0;k<15;k++){const a=(i*15+k)*3;f.push([cl.data[a]/1000,cl.data[a+1]/1000,cl.data[a+2]/1000])}raw.push(f)}
+  let F;try{F=cleanMotion(raw)}catch(e){F=raw}cleanCache[cl.id]={n:cl.n,d:cl.data,F};return F}
+function framesAt(F,fps,t){const n=F.length;const fi=clamp(t*fps,0,n-1),i=Math.floor(fi),u=fi-i,j=Math.min(i+1,n-1);return F[i].map((a,k)=>{const b=F[j][k];return[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u]})}
+/* ---------------- realistic 3D dancers (Three.js + public-domain rigged human) ---------------- */
+const Human3D=(()=>{let M=null,loading=null;const V3=()=>new THREE.Vector3(),Q=()=>new THREE.Quaternion();
+  const loadScript=src=>new Promise((res,rej)=>{if(document.querySelector(`script[data-h3="${src}"]`))return res();const s=document.createElement("script");s.src=src;s.dataset.h3=src;s.onload=res;s.onerror=()=>rej(new Error("load "+src));document.head.appendChild(s)});
+  const SKIN=["spine004","spine005","hand","f_","thumb"],SHOES=["foot","toe","heel"],PANTS=["pelvis","thigh","shin"];
+  const LIMBS=[["upper_arm.L","forearm.L",1,3],["forearm.L","hand.L",3,5],["upper_arm.R","forearm.R",2,4],["forearm.R","hand.R",4,6],["thigh.L","shin.L",7,9],["shin.L","foot.L",9,11],["thigh.R","shin.R",8,10],["shin.R","foot.R",10,12],["foot.L","toe.L",11,13],["foot.R","toe.R",12,14]];
+  function load(base){return loading||(loading=(async()=>{await loadScript(base+"lib/three.min.js");await loadScript(base+"lib/GLTFLoader.js");await loadScript(base+"lib/SkeletonUtils.js");
+    const g=await new Promise((res,rej)=>new THREE.GLTFLoader().load(base+"models/human.glb",res,undefined,rej));M=prep(g);return true})().catch(e=>{loading=null;throw e}))}
+  const NN=n=>n.replace(/[.\s]/g,"");
+  function boneMap(root){const m={};root.traverse(o=>{if(o.isBone){m[o.name]=o;m[NN(o.name)]=o}});return new Proxy(m,{get:(t,k)=>typeof k==="string"?(t[k]||t[NN(k)]):t[k]})}
+  const cmp=(a,v,k)=>k===0?a.getX(v):k===1?a.getY(v):k===2?a.getZ(v):a.getW(v);
+  function basis(r,u){const rr=r.clone().addScaledVector(u,-r.dot(u)).normalize(),f=V3().crossVectors(rr,u).normalize();const m=new THREE.Matrix4().makeBasis(rr,u,f);return Q().setFromRotationMatrix(m)}
+  function prep(g){const scene=g.scene;scene.updateMatrixWorld(true);let mesh=null;scene.traverse(o=>{if(o.isSkinnedMesh&&!mesh)mesh=o});const B=boneMap(scene);
+    const wp=n=>B[n].getWorldPosition(V3());const box=new THREE.Box3().setFromObject(mesh);
+    /* the rig's own bind pose, so every pose starts from the same place */
+    const bindQ={},bindP={},restW={};const all=[];scene.traverse(o=>{if(o.isBone)all.push(o)});all.forEach(b=>{const k=NN(b.name);bindQ[k]=b.quaternion.clone();bindP[k]=b.position.clone();restW[k]=b.getWorldQuaternion(Q())});
+    const u0=wp("spine.004").sub(wp("spine")).normalize();const qHip=basis(wp("thigh.L").sub(wp("thigh.R")),u0),qChest=basis(wp("upper_arm.L").sub(wp("upper_arm.R")),u0);
+    let soleY=Infinity;["toe.L","toe.R","heel.02.L","heel.02.R","foot.L","foot.R"].forEach(n=>{soleY=Math.min(soleY,wp(n).y)});
+    /* which part of the outfit each vertex belongs to, from the bone that moves it most */
+    const geo=mesh.geometry,ji=geo.attributes.skinIndex,wi=geo.attributes.skinWeight,names=mesh.skeleton.bones.map(b=>NN(b.name)),region=new Uint8Array(ji.count);
+    for(let v=0;v<ji.count;v++){let bi=0,bw=-1;for(let k=0;k<4;k++){const w=cmp(wi,v,k);if(w>bw){bw=w;bi=cmp(ji,v,k)}}const n=names[bi]||"";
+      region[v]=SKIN.some(p=>n.startsWith(p))?0:SHOES.some(p=>n.startsWith(p))?3:PANTS.some(p=>n.startsWith(p))||n==="spine"?2:1}
+    return{scene,height:box.max.y-box.min.y,minY:box.min.y,soleOff:box.min.y-soleY,bindQ,bindP,restW,qHipInv:qHip.invert(),qChestInv:qChest.invert(),region}}
+  function makeDancer(color,heightFt,skin){const root=THREE.SkeletonUtils.clone(M.scene);let mesh=null;root.traverse(o=>{if(o.isSkinnedMesh&&!mesh)mesh=o});
+    const geo=mesh.geometry.clone();const n=geo.attributes.position.count,cols=new Float32Array(n*3);const cShirt=new THREE.Color(color),cPants=new THREE.Color("#2a2433"),cShoe=new THREE.Color("#1a1620"),cSkin=new THREE.Color(skin||"#b07a58");
+    for(let v=0;v<n;v++){const c=[cSkin,cShirt,cPants,cShoe][M.region[v]];cols[v*3]=c.r;cols[v*3+1]=c.g;cols[v*3+2]=c.b}geo.setAttribute("color",new THREE.BufferAttribute(cols,3));geo.computeVertexNormals();mesh.geometry=geo;
+    const mat=new THREE.MeshStandardMaterial({vertexColors:true,skinning:true,roughness:.72,metalness:0,transparent:true,opacity:1});mesh.material=mat;mesh.castShadow=true;mesh.receiveShadow=false;mesh.frustumCulled=false;
+    const holder=new THREE.Group();holder.add(root);const s=heightFt/M.height;root.scale.setScalar(s);return{holder,root,mesh,mat,B:boneMap(root),s}}
+  function setWorldQ(b,qw){const pq=b.parent.getWorldQuaternion(Q());b.quaternion.copy(pq.invert().multiply(qw))}
+  /* pose a dancer from 15 tracked joints (world units, feet); lift = how high the feet are off the floor */
+  function pose(D,J,lift){const B=D.B;for(const n in M.bindQ){const b=B[n];if(b){b.quaternion.copy(M.bindQ[n]);b.position.copy(M.bindP[n])}}D.root.position.set(0,0,0);D.holder.updateMatrixWorld(true);
+    const P=J.map(j=>new THREE.Vector3(j[0],j[1],j[2]));const pel=P[7].clone().add(P[8]).multiplyScalar(.5),neck=P[1].clone().add(P[2]).multiplyScalar(.5);const u=neck.clone().sub(pel).normalize();
+    const qh=basis(P[7].clone().sub(P[8]),u).multiply(M.qHipInv),qc=basis(P[1].clone().sub(P[2]),u).multiply(M.qChestInv);
+    const spineSet=[["spine",0],["spine.001",.35],["spine.002",.7],["spine.003",1]];
+    for(const [n,t] of spineSet){const q=qh.clone().slerp(qc,t);setWorldQ(B[n],q.multiply(M.restW[NN(n)]));B[n].updateMatrixWorld(true)}
+    const hip=B.spine;hip.position.copy(hip.parent.worldToLocal(pel.clone()));D.holder.updateMatrixWorld(true);
+    for(const [bn,cn,a,b] of LIMBS){const bone=B[bn],child=B[cn];bone.updateMatrixWorld(true);const pb=bone.getWorldPosition(V3()),pc=child.getWorldPosition(V3());
+      const dc=pc.sub(pb).normalize(),dt=P[b].clone().sub(P[a]);if(dt.lengthSq()<1e-8)continue;dt.normalize();const delta=Q().setFromUnitVectors(dc,dt);setWorldQ(bone,delta.multiply(bone.getWorldQuaternion(Q())));bone.updateMatrixWorld(true)}
+    let minY=Infinity;["toe.L","toe.R","heel.02.L","heel.02.R","foot.L","foot.R"].forEach(n=>{minY=Math.min(minY,B[n].getWorldPosition(V3()).y)});
+    D.holder.position.y=(lift||0)-(minY+M.soleOff*D.s);D.holder.updateMatrixWorld(true)}
+  function headPos(D){return D.B["spine.005"].getWorldPosition(V3())}
+  return{load,makeDancer,pose,headPos,ready:()=>!!M}})();
+/* a relaxed standing pose (meters, x = dancer's left, h = up, d = upstage) */
+const STAND=[[0,1.6,-.07],[.19,1.43,0],[-.19,1.43,0],[.24,1.15,.02],[-.24,1.15,.02],[.25,.9,-.04],[-.25,.9,-.04],[.1,.94,0],[-.1,.94,0],[.11,.5,-.02],[-.11,.5,-.02],[.11,.08,.02],[-.11,.08,.02],[.13,.02,-.15],[-.13,.02,-.15]];
+
+/* ---------------- the 3D audience view with realistic dancers ---------------- */
+const G3={r:null,failed:false,starting:null,dancers:new Map(),props:new Map(),floorKey:""};
+function start3D(){if(G3.r)return Promise.resolve(true);if(G3.failed)return Promise.resolve(false);if(G3.starting)return G3.starting;
+  G3.starting=Human3D.load(new URL("./",location.href).href).then(()=>{initGL();return true}).catch(e=>{G3.failed=true;G3.starting=null;console.warn("Realistic 3D dancers unavailable here",e);return false});return G3.starting}
+function initGL(){const R3=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});R3.setPixelRatio(Math.min(2,window.devicePixelRatio||1));R3.shadowMap.enabled=true;R3.shadowMap.type=THREE.PCFSoftShadowMap;R3.domElement.className="glc";
+  const sc=new THREE.Scene();const bg=new THREE.Color("#1d1530");sc.background=bg;sc.fog=new THREE.Fog(bg,70,160);
+  sc.add(new THREE.HemisphereLight(0xe8e0ff,0x2a1f40,.85));const key=new THREE.DirectionalLight(0xfff1dc,1);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-.0004;sc.add(key);sc.add(key.target);
+  const rim=new THREE.DirectionalLight(0xb9a6ff,.45);sc.add(rim);const stage=new THREE.Group();sc.add(stage);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(1.25,1.6,48),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9}));ring.rotation.x=-Math.PI/2;ring.visible=false;sc.add(ring);
+  Object.assign(G3,{r:R3,sc,cam:new THREE.PerspectiveCamera(30,16/9,.5,500),key,rim,stage,ring})}
+function buildFloorGL(r){const ww=wingsShown(r)?WING:0;const k=[r.W,r.D,ww].join();if(G3.floorKey===k)return;G3.floorKey=k;const g=G3.stage;while(g.children.length){const c=g.children.pop();c.geometry&&c.geometry.dispose()}
+  const{W,D}=r;const plane=(w,d,col,x,z,y)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshStandardMaterial({color:col,roughness:.95}));m.rotation.x=-Math.PI/2;m.position.set(x,y||0,z);m.receiveShadow=true;g.add(m);return m};
+  plane(W+80,D+80,0x171224,0,0,-.02);plane(W,D,0x2e2345,0,0);if(ww){plane(ww,D,0x211a32,-W/2-ww/2,0,.001);plane(ww,D,0x211a32,W/2+ww/2,0,.001)}
+  const pts=[];for(let x=-W/2;x<=W/2+1e-6;x+=2)pts.push(x,.02,-D/2,x,.02,D/2);for(let y=0;y<=D+1e-6;y+=2)pts.push(-W/2,.02,D/2-y,W/2,.02,D/2-y);
+  const gg=new THREE.BufferGeometry();gg.setAttribute("position",new THREE.Float32BufferAttribute(pts,3));g.add(new THREE.LineSegments(gg,new THREE.LineBasicMaterial({color:0x5a4a80,transparent:true,opacity:.45})));
+  const cg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,.03,-D/2),new THREE.Vector3(0,.03,D/2)]);const cl=new THREE.Line(cg,new THREE.LineDashedMaterial({color:0xf2b544,dashSize:.6,gapSize:.6,transparent:true,opacity:.55}));cl.computeLineDistances();g.add(cl);
+  const edge=plane(W,.12,0xf2b544,0,D/2-.06,.025);edge.material=new THREE.MeshBasicMaterial({color:0xf2b544})}
+function glDancer(d){const sig=d.color+"|"+(d.height||66);let e=G3.dancers.get(d.id);if(e&&e.sig===sig)return e;if(e)G3.sc.remove(e.holder);
+  e=Human3D.makeDancer(d.color,(d.height||66)/12);e.sig=sig;G3.sc.add(e.holder);G3.dancers.set(d.id,e);return e}
+function drawGL(r,beat,L,w,h){buildFloorGL(r);const{r:R3,sc,cam,key,rim}=G3;if(R3._w!==w||R3._h!==h){R3.setSize(w,h,false);R3._w=w;R3._h=h}
+  const{W,D}=r;cam.aspect=w/h;cam.fov=26;cam.updateProjectionMatrix();const hf=2*Math.atan(Math.tan(cam.fov*Math.PI/360)*cam.aspect);const dist=Math.max((W/2+.5)/Math.tan(hf/2)*.92,D*.9);const back=ui.flipY?-1:1;
+  cam.position.set(0,dist*.25,back*(D/2+dist*.86));cam.lookAt(0,1.6,-back*D*.16);key.position.set(W*.3,Math.max(W,D)*1.1,back*D*.9);key.target.position.set(0,0,0);
+  Object.assign(key.shadow.camera,{left:-(W/2+WING+3),right:W/2+WING+3,top:D/2+6,bottom:-(D/2+6),near:1,far:Math.max(W,D)*4});key.shadow.camera.updateProjectionMatrix();rim.position.set(-W*.4,W*.5,-back*D);
+  const cast=castOf(r),keep=new Set(cast.map(d=>d.id));for(const [id,e] of G3.dancers)if(!keep.has(id)){sc.remove(e.holder);G3.dancers.delete(id)}
+  const spotId=ui.mode==="spot"?ui.spot:null;G3.ring.visible=false;
+  cast.forEach(d=>{const e=glDancer(d);const p=posAt(r,beat,d.id);const H=(d.height||66)/12;const mo=motionAt(r,L,beat,d.id);const J0=mo?mo.joints:STAND,ref=mo?mo.ref:1.6;const k=(H*.93)/ref;
+    const zc=D/2-p.y;const J=J0.map(j=>[p.x+j[0]*k,j[1]*k,zc-j[2]*k]);const lift=mo?Math.max(0,Math.min(J0[11][1],J0[12][1],J0[13][1],J0[14][1])*k-.25):0;Human3D.pose(e,J,lift);
+    const op=(spotId&&spotId!==d.id?.28:1)*(Math.abs(p.x)>W/2+.05?.45:1);if(e.mat.opacity!==op){e.mat.opacity=op;const tr=op<1;if(e.mat.transparent!==tr){e.mat.transparent=tr;e.mat.needsUpdate=true}}
+    e.cur={p,zc,H};if(spotId===d.id){G3.ring.visible=true;G3.ring.position.set(p.x,.04,zc)}});
+  const props=r.props||[],pk=new Set(props.map(x=>x.id));for(const [id,m] of G3.props)if(!pk.has(id)){sc.remove(m);G3.props.delete(id)}
+  props.forEach(pr=>{let m=G3.props.get(pr.id);if(!m){m=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.4,1.3),new THREE.MeshStandardMaterial({color:0xcfc6e6,roughness:.6}));m.castShadow=true;sc.add(m);G3.props.set(pr.id,m)}const q=propAt(r,beat,pr.id);m.position.set(q.x,.7,D/2-q.y)});
+  R3.render(sc,cam)}
+function glLabels(c,w,h,r,beat,L,mirror){const{cam}=G3;const v=new THREE.Vector3();const proj=(x,y,z)=>{v.set(x,y,z).project(cam);return[mirror?w-(v.x+1)/2*w:(v.x+1)/2*w,(1-v.y)/2*h,v.z]};const cur=r.formations[L.i];const spotId=ui.mode==="spot"?ui.spot:null;
+  c.textAlign="center";c.textBaseline="alphabetic";
+  castOf(r).forEach(d=>{const e=G3.dancers.get(d.id);if(!e||!e.cur)return;const hp=Human3D.headPos(e);const a=proj(hp.x,hp.y+.95,hp.z);if(a[2]>1)return;const dim=spotId&&spotId!==d.id;c.globalAlpha=dim?.35:1;
+    c.font="700 12px Manrope, system-ui, sans-serif";c.lineWidth=3;c.strokeStyle="rgba(20,12,36,.85)";c.strokeText(shortName(d.name),a[0],a[1]);c.fillStyle="#f1ecfb";c.fillText(shortName(d.name),a[0],a[1]);
+    const mv=L.moving?"":(cur.moves[d.id]||"");if(mv){const b=proj(e.cur.p.x,0,e.cur.zc+1.2);c.font="700 11px Manrope, system-ui, sans-serif";c.strokeText(mv,b[0],b[1]+12);c.fillStyle="#f2b544";c.fillText(mv,b[0],b[1]+12)}});
+  (r.props||[]).forEach(pr=>{const q=propAt(r,beat,pr.id);const a=proj(q.x,1.9,D_(r)/2-q.y);c.globalAlpha=1;c.font="600 11px Manrope, system-ui, sans-serif";c.fillStyle="rgba(233,226,246,.8)";c.fillText(pr.name,a[0],a[1])});
+  c.globalAlpha=1;c.fillStyle="rgba(233,226,246,.5)";c.font="700 10px Manrope, system-ui, sans-serif";c.fillText(ui.flipY?"VIEW FROM THE BACK OF THE STAGE"+(mirror?" · MIRRORED":""):mirror?"AUDIENCE VIEW · MIRRORED":"YOU ARE IN THE AUDIENCE",w/2,h-8)}
+const D_=r=>r.D;
+function draw3dAny(r,beat,L){const wrap=$("#gl3"),cv2=$("#stage3d");if(G3.r&&wrap){if(cv2)cv2.hidden=true;wrap.hidden=false;if(G3.r.domElement.parentNode!==wrap)wrap.insertBefore(G3.r.domElement,wrap.firstChild);
+    const w=Math.max(280,wrap.clientWidth||((wrap.parentElement&&wrap.parentElement.clientWidth)||600)-20),h=Math.round(w*.56);wrap.style.height=h+"px";G3.r.domElement.style.transform=ui.flipX?"scaleX(-1)":"";drawGL(r,beat,L,w,h);
+    const ov=$("#gl3ov");const dpr=Math.min(2,window.devicePixelRatio||1);if(ov.width!==Math.round(w*dpr)||ov.height!==Math.round(h*dpr)){ov.width=Math.round(w*dpr);ov.height=Math.round(h*dpr)}const c=ov.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);glLabels(c,w,h,r,beat,L,ui.flipX);return}
+  if(wrap)wrap.hidden=true;if(cv2)cv2.hidden=false;draw3d(r,beat,L);if(!G3.failed)start3D().then(ok=>{if(ok&&ui.view==="3d"&&ui.tab==="stage"&&!ui.phone)drawFrame()})}
+
 /* draws a capsule-limbed body; joints are [x right, h up, d upstage] in meters, k converts to stage feet */
 function drawFigure(c,pr,p,J,k,color){const Wp=J.map(([x,h,d])=>({X:p.x+x*k,Y:p.y+d*k,Z:h*k}));const P=Wp.map(q=>pr(q.X,q.Y,q.Z));const edge="rgba(12,7,24,.6)";
   const path=pts=>{c.beginPath();pts.forEach((q,n)=>n?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]))};
@@ -1055,7 +1177,7 @@ function editCue(r,cue,beat){const b0=cue?cue.b:Math.max(0,Math.round(beat));con
   $("form",m).addEventListener("submit",ev=>{ev.preventDefault();const t=ti.value.trim();if(!t){m.remove();return}const b=(Math.max(1,Math.round(+$("#cuE",m).value)||1)-1)*8+clamp(Math.round(+$("#cuC",m).value)||1,1,8)-1;
     pushUndo();r.cues=r.cues||[];if(cue){cue.t=t.slice(0,80);cue.b=b}else r.cues.push({id:uid(),b,t:t.slice(0,80)});m.remove();saveRoutine(r);renderTimeline();drawFrame()})}
 function placeCueCap(r,beat){const cap=$("#cueCap");if(!cap)return;const c=activeCue(r,beat);if(!c){cap.hidden=true;return}if(cap.textContent!==c.t)cap.textContent=c.t;cap.hidden=false;
-  if(cap.classList.contains("ph"))return;const card=$(".stagecard"),v=ui.view==="3d"?$("#stage3d"):$("#stageSvg");if(!card||!v)return;const cr=card.getBoundingClientRect(),vr=v.getBoundingClientRect();cap.style.top=(vr.bottom-cr.top-cap.offsetHeight-(ui.view==="3d"?30:vr.height*0.085))+"px"}
+  if(cap.classList.contains("ph"))return;const card=$(".stagecard"),v=ui.view==="3d"?($("#gl3")&&!$("#gl3").hidden?$("#gl3"):$("#stage3d")):$("#stageSvg");if(!card||!v)return;const cr=card.getBoundingClientRect(),vr=v.getBoundingClientRect();cap.style.top=(vr.bottom-cr.top-cap.offsetHeight-(ui.view==="3d"?30:vr.height*0.085))+"px"}
 
 /* ----- timeline ----- */
 const PX=11;
@@ -1547,7 +1669,7 @@ function openExport(){const r=R();if(!r)return;stop();
     <div class="row" style="justify-content:flex-end"><button class="btn" data-x>Close</button><button class="btn pri" id="exGo">Start recording</button></div></div>`;
   document.body.appendChild(m);let job=null;
   m.addEventListener("click",e=>{if(e.target===m||e.target.closest("[data-x]")){if(job)job.cancel();m.remove()}});
-  $("#exGo",m).onclick=()=>{if(job){job.cancel();return}job=recordRoutine(r,$("#exV",m).value,$("#exA",m).checked,{bar:$("#exBar",m),msg:$("#exMsg",m),btn:$("#exGo",m),done:()=>{job=null}})}}
+  $("#exGo",m).onclick=async()=>{if(job){job.cancel();return}if($("#exV",m).value==="3d"&&!G3.r){$("#exMsg",m).textContent="Loading the 3D dancers…";await start3D()}job=recordRoutine(r,$("#exV",m).value,$("#exA",m).checked,{bar:$("#exBar",m),msg:$("#exMsg",m),btn:$("#exGo",m),done:()=>{job=null}})}}
 function recordRoutine(r,view,withAudio,ui2){const W=1280,H=720;const cv=document.createElement("canvas");cv.width=W;cv.height=H;const c=cv.getContext("2d");const stream=cv.captureStream(30);
   const au=$("#au");let dest=null;if(withAudio&&hasSong()&&audioGraph()){try{actx.resume();dest=actx.createMediaStreamDestination();aSrc.connect(dest);dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t))}catch(e){dest=null}}
   const mime=["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find(t=>{try{return MediaRecorder.isTypeSupported(t)}catch(e){return false}})||"";
@@ -1558,7 +1680,7 @@ function recordRoutine(r,view,withAudio,ui2){const W=1280,H=720;const cv=documen
     const type=(mime||"video/webm").split(";")[0];const blob=new Blob(chunks,{type});const ext=type.includes("mp4")?"mp4":"webm";const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${fileSlug(r.title)}.${ext}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
     ui2.msg.textContent=`Saved ${a.download} (${(blob.size/1048576).toFixed(1)} MB). Send it in your team chat.`;ui2.btn.textContent="Record again";ui2.bar.style.width="100%"};
   const frame=()=>{const playing=withAudio&&dest&&!au.paused;const beat=playing?secToBeat(r,au.currentTime):(performance.now()-t0)/1000*r.bpm/60;const b=clamp(beat,0,tot);const L=locate(r,b);
-    ui.flipX=false;ui.flipY=false;ui.mode="edit";if(view==="3d"){render3d(c,W,H,r,b,L)}else renderTopTo(c,W,H,r,b,L);drawOverlay(c,W,H,r,b,L);ui.flipX=keep.x;ui.flipY=keep.y;ui.mode=keep.mode;
+    ui.flipX=false;ui.flipY=false;ui.mode="edit";if(view==="3d"){if(G3.r){drawGL(r,b,L,W,H);c.drawImage(G3.r.domElement,0,0,W,H);glLabels(c,W,H,r,b,L,false)}else render3d(c,W,H,r,b,L)}else renderTopTo(c,W,H,r,b,L);drawOverlay(c,W,H,r,b,L);ui.flipX=keep.x;ui.flipY=keep.y;ui.mode=keep.mode;
     ui2.bar.style.width=Math.min(100,beat/endBeat*100)+"%";ui2.msg.textContent=`Recording… ${fmtTime(beat*60/r.bpm)} of ${fmtTime(endBeat*60/r.bpm)}`;
     if(beat>=endBeat||(playing===false&&dest&&au.ended)){rec.stop();return}rafId=requestAnimationFrame(frame)};
   ui2.btn.textContent="Cancel";ui2.msg.textContent="Starting…";ui2.bar.style.width="0";

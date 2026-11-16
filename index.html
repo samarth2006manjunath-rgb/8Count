@@ -136,6 +136,13 @@ main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px
 .gl3[hidden]{display:none}
 .gl3 canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
 .gl3 #gl3ov{pointer-events:none}
+.gl3 canvas.glc{cursor:grab}
+.gl3 canvas.glc:active{cursor:grabbing}
+.camctl{position:absolute;top:10px;right:10px;z-index:2;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 20px)}
+.camctl button{border:1px solid var(--stage-line-2);background:rgba(10,6,20,.6);color:rgba(233,226,246,.85);border-radius:999px;padding:4px 10px;font:700 12px var(--f-body);backdrop-filter:blur(4px)}
+.camctl button[aria-pressed="true"]{background:var(--stage-mark);border-color:var(--stage-mark);color:#22180a}
+.camhint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:2;background:rgba(10,6,20,.72);color:#f1ecfb;font:600 12px var(--f-body);padding:6px 12px;border-radius:999px;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+.camhint[hidden]{display:none}
 /* cues */
 .cuelane{position:relative;height:22px;margin-top:4px;border-bottom:1px dashed var(--line);cursor:copy}
 .cuechip{position:absolute;top:2px;height:18px;border:0;border-radius:5px;background:var(--ink);color:var(--surface);font:700 11px var(--f-body);padding:0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
@@ -625,7 +632,9 @@ function renderStageTab(m){
         </div>
         <svg id="stageSvg" ${ui.view==="3d"?"hidden":""} xmlns="http://www.w3.org/2000/svg"></svg>
         <canvas id="stage3d" ${ui.view==="top"?"hidden":""}></canvas>
-        <div class="gl3" id="gl3" hidden><canvas id="gl3ov" aria-hidden="true"></canvas></div>
+        <div class="gl3" id="gl3" hidden><canvas id="gl3ov" aria-hidden="true"></canvas>
+          <div class="camctl" role="group" aria-label="Camera"><button data-cam="reset" aria-pressed="${!G3.view.user}" title="Back to the audience view (or double-click the stage)">⟲ Audience</button><button data-cam="above" aria-pressed="false">Above</button><button data-cam="side" aria-pressed="false">Side</button><button data-cam="stage" aria-pressed="false" title="Look out from the back of the stage">Dancers' view</button></div>
+          <div class="camhint" id="camHint" ${(()=>{try{return localStorage.getItem("8c.camhint")?"hidden":""}catch(e){return ""}})()}>Drag to turn the stage · right-drag or Shift-drag to move · scroll or pinch to zoom</div></div>
         <div class="seltools" id="selTools" hidden><button class="btn sm" id="collectBtn">+ Collect</button><button class="btn sm" id="clearBtn">Clear</button></div>
         <div class="cuecap" id="cueCap" aria-live="polite" hidden></div>
         <div class="swapbar" id="swapBar" role="status" hidden><span id="swapMsg"></span><button class="btn sm" id="barBtn">Cancel</button></div>
@@ -694,6 +703,7 @@ function bindStageTab(m){
   const bb=$("#barBtn",m);if(bb)bb.onclick=()=>{if(ui.collect)finishCollect()};
   $$("[data-mode]",m).forEach(b=>b.onclick=()=>{ui.mode=b.dataset.mode;ui.sel.clear();render()});
   $$("[data-view]",m).forEach(b=>b.onclick=()=>{ui.view=b.dataset.view;render()});
+  $$("[data-cam]",m).forEach(b=>b.onclick=()=>camPreset(b.dataset.cam));
 }
 
 /* ----- stage svg ----- */
@@ -861,7 +871,7 @@ function initGL(){const R3=new THREE.WebGLRenderer({antialias:true,preserveDrawi
   sc.add(new THREE.HemisphereLight(0xe8e0ff,0x2a1f40,.85));const key=new THREE.DirectionalLight(0xfff1dc,1);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-.0004;sc.add(key);sc.add(key.target);
   const rim=new THREE.DirectionalLight(0xb9a6ff,.45);sc.add(rim);const stage=new THREE.Group();sc.add(stage);
   const ring=new THREE.Mesh(new THREE.RingGeometry(1.25,1.6,48),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9}));ring.rotation.x=-Math.PI/2;ring.visible=false;sc.add(ring);
-  Object.assign(G3,{r:R3,sc,cam:new THREE.PerspectiveCamera(30,16/9,.5,500),key,rim,stage,ring})}
+  Object.assign(G3,{r:R3,sc,cam:new THREE.PerspectiveCamera(30,16/9,.5,500),key,rim,stage,ring});bindOrbit(R3.domElement)}
 function buildFloorGL(r){const ww=wingsShown(r)?WING:0;const k=[r.W,r.D,ww].join();if(G3.floorKey===k)return;G3.floorKey=k;const g=G3.stage;while(g.children.length){const c=g.children.pop();c.geometry&&c.geometry.dispose()}
   const{W,D}=r;const plane=(w,d,col,x,z,y)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshStandardMaterial({color:col,roughness:.95}));m.rotation.x=-Math.PI/2;m.position.set(x,y||0,z);m.receiveShadow=true;g.add(m);return m};
   plane(W+80,D+80,0x171224,0,0,-.02);plane(W,D,0x2e2345,0,0);if(ww){plane(ww,D,0x211a32,-W/2-ww/2,0,.001);plane(ww,D,0x211a32,W/2+ww/2,0,.001)}
@@ -871,9 +881,10 @@ function buildFloorGL(r){const ww=wingsShown(r)?WING:0;const k=[r.W,r.D,ww].join
   const edge=plane(W,.12,0xf2b544,0,D/2-.06,.025);edge.material=new THREE.MeshBasicMaterial({color:0xf2b544})}
 function glDancer(d){const sig=d.color+"|"+(d.height||66);let e=G3.dancers.get(d.id);if(e&&e.sig===sig)return e;if(e)G3.sc.remove(e.holder);
   e=Human3D.makeDancer(d.color,(d.height||66)/12);e.sig=sig;G3.sc.add(e.holder);G3.dancers.set(d.id,e);return e}
-function drawGL(r,beat,L,w,h){buildFloorGL(r);const{r:R3,sc,cam,key,rim}=G3;if(R3._w!==w||R3._h!==h){R3.setSize(w,h,false);R3._w=w;R3._h=h}
+function drawGL(r,beat,L,w,h,opts){buildFloorGL(r);const{r:R3,sc,cam,key,rim}=G3;if(R3._w!==w||R3._h!==h){R3.setSize(w,h,false);R3._w=w;R3._h=h}
   const{W,D}=r;cam.aspect=w/h;cam.fov=26;cam.updateProjectionMatrix();const hf=2*Math.atan(Math.tan(cam.fov*Math.PI/360)*cam.aspect);const dist=Math.max((W/2+.5)/Math.tan(hf/2)*.92,D*.9);const back=ui.flipY?-1:1;
-  cam.position.set(0,dist*.25,back*(D/2+dist*.86));cam.lookAt(0,1.6,-back*D*.16);key.position.set(W*.3,Math.max(W,D)*1.1,back*D*.9);key.target.position.set(0,0,0);
+  const autoPos=new THREE.Vector3(0,dist*.25,back*(D/2+dist*.86)),autoTgt=new THREE.Vector3(0,1.6,-back*D*.16);G3.auto={pos:autoPos,tgt:autoTgt,dist:autoPos.distanceTo(autoTgt),W,D};
+  if(opts&&opts.auto||!G3.view.user){cam.position.copy(autoPos);cam.lookAt(autoTgt)}else applyOrbit(cam,r);key.position.set(W*.3,Math.max(W,D)*1.1,back*D*.9);key.target.position.set(0,0,0);
   Object.assign(key.shadow.camera,{left:-(W/2+WING+3),right:W/2+WING+3,top:D/2+6,bottom:-(D/2+6),near:1,far:Math.max(W,D)*4});key.shadow.camera.updateProjectionMatrix();rim.position.set(-W*.4,W*.5,-back*D);
   const cast=castOf(r),keep=new Set(cast.map(d=>d.id));for(const [id,e] of G3.dancers)if(!keep.has(id)){sc.remove(e.holder);G3.dancers.delete(id)}
   const spotId=ui.mode==="spot"?ui.spot:null;G3.ring.visible=false;
@@ -890,7 +901,34 @@ function glLabels(c,w,h,r,beat,L,mirror){const{cam}=G3;const v=new THREE.Vector3
     c.font="700 12px Manrope, system-ui, sans-serif";c.lineWidth=3;c.strokeStyle="rgba(20,12,36,.85)";c.strokeText(shortName(d.name),a[0],a[1]);c.fillStyle="#f1ecfb";c.fillText(shortName(d.name),a[0],a[1]);
     const mv=L.moving?"":(cur.moves[d.id]||"");if(mv){const b=proj(e.cur.p.x,0,e.cur.zc+1.2);c.font="700 11px Manrope, system-ui, sans-serif";c.strokeText(mv,b[0],b[1]+12);c.fillStyle="#f2b544";c.fillText(mv,b[0],b[1]+12)}});
   (r.props||[]).forEach(pr=>{const q=propAt(r,beat,pr.id);const a=proj(q.x,1.9,D_(r)/2-q.y);c.globalAlpha=1;c.font="600 11px Manrope, system-ui, sans-serif";c.fillStyle="rgba(233,226,246,.8)";c.fillText(pr.name,a[0],a[1])});
-  c.globalAlpha=1;c.fillStyle="rgba(233,226,246,.5)";c.font="700 10px Manrope, system-ui, sans-serif";c.fillText(ui.flipY?"VIEW FROM THE BACK OF THE STAGE"+(mirror?" · MIRRORED":""):mirror?"AUDIENCE VIEW · MIRRORED":"YOU ARE IN THE AUDIENCE",w/2,h-8)}
+  c.globalAlpha=1;c.fillStyle="rgba(233,226,246,.5)";c.font="700 10px Manrope, system-ui, sans-serif";c.fillText(G3.view.user&&c.canvas.id==="gl3ov"?"FREE CAMERA · DOUBLE-CLICK TO GO BACK TO THE AUDIENCE VIEW":ui.flipY?"VIEW FROM THE BACK OF THE STAGE"+(mirror?" · MIRRORED":""):mirror?"AUDIENCE VIEW · MIRRORED":"YOU ARE IN THE AUDIENCE",w/2,h-8)}
+
+/* ---------------- free camera: drag to orbit, right/shift-drag to pan, scroll or pinch to zoom ---------------- */
+G3.view={user:false,tgt:null,theta:0,phi:1.2,radius:40};
+function startUser(){const v=G3.view;if(v.user||!G3.auto)return;const off=G3.auto.pos.clone().sub(G3.auto.tgt);v.radius=off.length();v.phi=Math.acos(clamp(off.y/v.radius,-1,1));v.theta=Math.atan2(off.x,off.z);v.tgt=G3.auto.tgt.clone();v.user=true;hideCamHint()}
+function applyOrbit(cam,r){const v=G3.view;v.phi=clamp(v.phi,.04,1.53);v.radius=clamp(v.radius,6,240);const lim=r?{x:r.W/2+12,z:r.D/2+12}:{x:40,z:40};v.tgt.x=clamp(v.tgt.x,-lim.x,lim.x);v.tgt.z=clamp(v.tgt.z,-lim.z,lim.z);v.tgt.y=clamp(v.tgt.y,0,8);
+  cam.position.set(v.tgt.x+v.radius*Math.sin(v.phi)*Math.sin(v.theta),v.tgt.y+v.radius*Math.cos(v.phi),v.tgt.z+v.radius*Math.sin(v.phi)*Math.cos(v.theta));cam.lookAt(v.tgt)}
+function camPreset(kind){const r=R();if(!r||!G3.r)return;const v=G3.view;if(kind==="reset"){v.user=false;drawFrame();updateCamBtns();return}
+  if(!G3.auto)drawFrame();startUser();const back=ui.flipY?Math.PI:0;const fit=Math.max(r.W,r.D)*1.15+8;v.tgt=new THREE.Vector3(0,kind==="stage"?3:1,0);
+  if(kind==="above"){v.theta=back;v.phi=.05;v.radius=fit*1.05}else if(kind==="side"){v.theta=back+Math.PI/2;v.phi=1.25;v.radius=fit}else if(kind==="stage"){v.theta=back+Math.PI;v.phi=1.32;v.radius=fit*.8}
+  drawFrame();updateCamBtns(kind)}
+function updateCamBtns(kind){$$("[data-cam]").forEach(b=>b.setAttribute("aria-pressed",String(G3.view.user?b.dataset.cam===kind:b.dataset.cam==="reset")))}
+let camRaf=0;function camRender(){if(ui.playing||camRaf)return;camRaf=requestAnimationFrame(()=>{camRaf=0;if(ui.view==="3d"&&ui.tab==="stage")drawFrame()})}
+function hideCamHint(){try{localStorage.setItem("8c.camhint","1")}catch(e){}const h=$("#camHint");if(h)h.hidden=true}
+function bindOrbit(el){const ptrs=new Map();let mode=null,last=null,pinch=null;el.style.touchAction="none";el.addEventListener("contextmenu",e=>e.preventDefault());
+  const mid=()=>{const P=[...ptrs.values()];return{x:(P[0].x+P[1].x)/2,y:(P[0].y+P[1].y)/2,d:Math.hypot(P[0].x-P[1].x,P[0].y-P[1].y)}};
+  const pan=(dx,dy)=>{const v=G3.view,s=v.radius*.0016;const right=new THREE.Vector3(Math.cos(v.theta),0,-Math.sin(v.theta)),fwd=new THREE.Vector3(Math.sin(v.theta),0,Math.cos(v.theta));v.tgt.addScaledVector(right,-dx*s).addScaledVector(fwd,-dy*s)};
+  el.addEventListener("pointerdown",e=>{if(!G3.auto)return;el.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});startUser();updateCamBtns(null);
+    if(ptrs.size===2){mode="pinch";pinch=mid()}else{mode=(e.button===2||e.button===1||e.shiftKey)?"pan":"rot";last={x:e.clientX,y:e.clientY}}});
+  el.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});const v=G3.view,mx=ui.flipX?-1:1;
+    if(mode==="pinch"&&ptrs.size===2){const m=mid();if(pinch.d>0&&m.d>0)v.radius*=pinch.d/m.d;pan((m.x-pinch.x)*mx,m.y-pinch.y);pinch=m}
+    else if(last){const dx=(e.clientX-last.x)*mx,dy=e.clientY-last.y;last={x:e.clientX,y:e.clientY};if(mode==="pan")pan(dx,dy);else{v.theta-=dx*.008;v.phi-=dy*.008}}
+    camRender()});
+  const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2&&mode==="pinch"){mode="rot";const P=[...ptrs.values()][0];last=P?{x:P.x,y:P.y}:null}if(!ptrs.size){mode=null;last=null}};
+  el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);
+  el.addEventListener("wheel",e=>{if(!G3.auto)return;e.preventDefault();startUser();updateCamBtns(null);G3.view.radius*=Math.exp(clamp(e.deltaY,-200,200)*.0015);camRender()},{passive:false});
+  el.addEventListener("dblclick",()=>camPreset("reset"))}
+
 const D_=r=>r.D;
 function draw3dAny(r,beat,L){const wrap=$("#gl3"),cv2=$("#stage3d");if(G3.r&&wrap){if(cv2)cv2.hidden=true;wrap.hidden=false;if(G3.r.domElement.parentNode!==wrap)wrap.insertBefore(G3.r.domElement,wrap.firstChild);
     const w=Math.max(280,wrap.clientWidth||((wrap.parentElement&&wrap.parentElement.clientWidth)||600)-20),h=Math.round(w*.56);wrap.style.height=h+"px";G3.r.domElement.style.transform=ui.flipX?"scaleX(-1)":"";drawGL(r,beat,L,w,h);
@@ -1049,7 +1087,7 @@ function stop(){if(!ui.playing)return;ui.playing=false;ui.counting=false;countTi
   phoneControls();
   if(ui.tab==="stage"&&R()){const r=R();ui.beat=clamp(ui.beat,0,totalBeats(r));renderTransport();drawFrame();renderTimeline();renderInspector()}}
 function setRate(v){ui.rate=v;const au=$("#au");if(ui.playing){if(hasSong()&&!au.paused)au.playbackRate=v;else{beat0=ui.beat;clock0=performance.now()}}renderPractice();$$("[data-prate]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.prate===v)))}
-function setFlip(axis){if(axis==="x")ui.flipX=!ui.flipX;else ui.flipY=!ui.flipY;ls.set("8c.flip",{x:ui.flipX,y:ui.flipY});buildStage();drawFrame();renderPractice();
+function setFlip(axis){if(axis==="y"&&G3.view)G3.view.user=false;if(axis==="x")ui.flipX=!ui.flipX;else ui.flipY=!ui.flipY;ls.set("8c.flip",{x:ui.flipX,y:ui.flipY});buildStage();drawFrame();renderPractice();
   $("#pFlipX")?.setAttribute("aria-pressed",String(ui.flipX));$("#pFlipY")?.setAttribute("aria-pressed",String(ui.flipY));
   toast(ui.flipX||ui.flipY?`Showing the stage ${[ui.flipX?"mirrored left to right":"",ui.flipY?"from the back":""].filter(Boolean).join(" and ")}`:"Back to the normal audience view")}
 function toggleLoop(){const r=R();if(!r)return;if(!ui.loop.on){const sec=sectionAt(r,ui.beat);if(sec){const g=sectionRange(r,sec);ui.loop.a=g.a;ui.loop.b=g.b}else{const e=Math.floor(ui.beat/8)+1;if(!(ui.loop.a>=1&&ui.loop.b>=ui.loop.a&&ui.loop.a<=e&&ui.loop.b>=e)){ui.loop.a=e;ui.loop.b=e+1}}}
@@ -1680,7 +1718,7 @@ function recordRoutine(r,view,withAudio,ui2){const W=1280,H=720;const cv=documen
     const type=(mime||"video/webm").split(";")[0];const blob=new Blob(chunks,{type});const ext=type.includes("mp4")?"mp4":"webm";const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${fileSlug(r.title)}.${ext}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
     ui2.msg.textContent=`Saved ${a.download} (${(blob.size/1048576).toFixed(1)} MB). Send it in your team chat.`;ui2.btn.textContent="Record again";ui2.bar.style.width="100%"};
   const frame=()=>{const playing=withAudio&&dest&&!au.paused;const beat=playing?secToBeat(r,au.currentTime):(performance.now()-t0)/1000*r.bpm/60;const b=clamp(beat,0,tot);const L=locate(r,b);
-    ui.flipX=false;ui.flipY=false;ui.mode="edit";if(view==="3d"){if(G3.r){drawGL(r,b,L,W,H);c.drawImage(G3.r.domElement,0,0,W,H);glLabels(c,W,H,r,b,L,false)}else render3d(c,W,H,r,b,L)}else renderTopTo(c,W,H,r,b,L);drawOverlay(c,W,H,r,b,L);ui.flipX=keep.x;ui.flipY=keep.y;ui.mode=keep.mode;
+    ui.flipX=false;ui.flipY=false;ui.mode="edit";if(view==="3d"){if(G3.r){drawGL(r,b,L,W,H,{auto:true});c.drawImage(G3.r.domElement,0,0,W,H);glLabels(c,W,H,r,b,L,false)}else render3d(c,W,H,r,b,L)}else renderTopTo(c,W,H,r,b,L);drawOverlay(c,W,H,r,b,L);ui.flipX=keep.x;ui.flipY=keep.y;ui.mode=keep.mode;
     ui2.bar.style.width=Math.min(100,beat/endBeat*100)+"%";ui2.msg.textContent=`Recording… ${fmtTime(beat*60/r.bpm)} of ${fmtTime(endBeat*60/r.bpm)}`;
     if(beat>=endBeat||(playing===false&&dest&&au.ended)){rec.stop();return}rafId=requestAnimationFrame(frame)};
   ui2.btn.textContent="Cancel";ui2.msg.textContent="Starting…";ui2.bar.style.width="0";
